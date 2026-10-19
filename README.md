@@ -1,13 +1,14 @@
 # Backdesk
 
 Missed-call text-back and quote recovery for Perth trade businesses on ServiceM8. Built solo
-with Claude Code, August to October 2026; stopped before the first paying client.
+with Claude Code, August to October 2026.
 
-**Archived case study.** Nothing here is deployed. Personal numbers, account IDs and market
-research are removed or replaced with fictitious values; the code, tests and planning record
-are otherwise intact.
+**Case study.** Development stopped in October 2026, before the first paying client. The
+original service is dormant rather than closed, and this repository is a sanitised copy:
+personal numbers, account IDs and market research are removed or replaced with fictitious
+values; the code, tests and planning record are otherwise intact.
 
-## What it did
+## What it does
 
 - **Missed-call text-back:** unanswered calls divert to a Backdesk number, an unrecorded
   greeting answers, and the caller gets a text from the business within seconds, then two
