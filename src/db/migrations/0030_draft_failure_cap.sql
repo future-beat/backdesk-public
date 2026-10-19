@@ -1,0 +1,23 @@
+-- ── A DETERMINISTIC DRAFTING REFUSAL NEEDS A TERMINATOR ─────────────────────
+--
+-- `MAX_DRAFT_ATTEMPTS` is read from `touch_drafts`, which is evidence of what
+-- the model WROTE. A 400/401/403 produces no model output, so no row is written
+-- and that ceiling never moves: a touch whose input makes every request a 400
+-- accumulated zero recorded attempts, was offered by `listNeedsDraft` every
+-- minute, and burned two calls a minute until D-12 expired the cadence six weeks
+-- later.
+--
+-- The classification pass reached the opposite conclusion for the identical
+-- situation and said why — `inbound_messages.classify_attempts`, bumped on a
+-- deterministic failure, with the cap in `listUnclassified`'s own predicate:
+-- the pass cannot tell a deployment-wide 400 from one unusual input, and only a
+-- counter makes the second case terminate. Two passes, same reasoning; this is
+-- the drafting half.
+--
+-- TWO COUNTERS, NOT ONE, because they bound genuinely different things: output
+-- the validator rejected (`touch_drafts` rows) and requests the API refused to
+-- answer at all (this column). A touch at the cap is NOT retired and is NOT an
+-- error — it simply stops being offered. Whether a follow-up this late should
+-- still go out is the cadence engine's decision (D-10/D-11), not the drafter's.
+
+ALTER TABLE "cadence_touches" ADD COLUMN "draft_failures" smallint DEFAULT 0 NOT NULL;

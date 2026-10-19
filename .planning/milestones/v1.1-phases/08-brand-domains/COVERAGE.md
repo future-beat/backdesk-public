@@ -1,0 +1,1 @@
+No external API integration: Resend domain management and the Vercel/ClickSend/pg_cron re-pointing use integrations already built and decided in Phases 2-4; this phase changes configuration and DNS, not API surface.

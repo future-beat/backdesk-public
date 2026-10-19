@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  The one-page offer sheet (M2), as HTML so the PDF is reproducible from the
+  repo rather than from a word processor nobody on this machine has.
+
+  Render:  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+             --headless --disable-gpu --no-pdf-header-footer \
+             --virtual-time-budget=4000 \
+             --print-to-pdf=docs/gtm/m2-offer-sheet.pdf \
+             "file://$PWD/scripts/brand/offer-sheet.html"
+
+  Wording mirrors LANDING_COPY in src/app/(marketing)/copy.ts as of
+  17 Oct 2026 (missed-call positioning; ONE plan, Call Catcher $397 / month,
+  the Back Desk tier and its extras removed 17 Oct; no setup fee; first 30
+  days free; founding five removed 16 Oct). When the site copy
+  changes, change this file in the same commit. Palette and type are the
+  brand's (Paper, Graphite, Recovered green; Inter with a system fallback).
+-->
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <title>Backdesk offer sheet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=block"
+      rel="stylesheet"
+    />
+    <style>
+      @page { size: A4; margin: 10mm 13mm 9mm; }
+      :root {
+        --bg: #fafaf7; --fg: #1a1f2b; --muted: #5b6270; --line: #d9dcd3;
+        --accent: #1b7a4a; --graphite: #1a1f2b; --paper: #ffffff;
+      }
+      /* Chrome honours `zoom` when printing; 0.9 keeps the sheet to one A4 page
+         without touching the type scale's proportions. */
+      body { zoom: 0.9; }
+      html, body { margin: 0; background: var(--paper); color: var(--fg);
+        font-family: Inter, -apple-system, "Helvetica Neue", Arial, sans-serif;
+        font-size: 8.7pt; line-height: 1.26; }
+      h1 { font-size: 22pt; margin: 0 0 1pt; letter-spacing: -0.01em; }
+      .tagline { color: var(--muted); font-size: 9.6pt; margin: 0 0 5pt; }
+      .lede { border-left: 3px solid var(--accent); padding: 3pt 0 3pt 9pt; margin: 0 0 6pt; }
+      .lede strong { font-weight: 600; }
+      h2 { font-size: 10.6pt; margin: 7pt 0 3pt; }
+      .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--line);
+        background: var(--bg); font-size: 8.2pt; line-height: 1.28; }
+      .steps div { padding: 5pt 7pt; border-right: 1px solid var(--line); }
+      .steps div:last-child { border-right: 0; }
+      .steps b { display: block; margin-bottom: 2pt; }
+      table.pricing { width: 100%; border-collapse: collapse; font-size: 8.8pt; }
+      table.pricing th, table.pricing td { border: 1px solid var(--line); padding: 4pt 7pt; vertical-align: top; text-align: left; }
+      table.pricing thead th { background: var(--graphite); color: #fff; font-weight: 600; }
+      table.pricing thead th:first-child { background: var(--graphite); }
+      table.pricing td.label { font-weight: 600; width: 16%; background: var(--bg); }
+      table.pricing .price { color: var(--accent); font-weight: 700; font-size: 12pt; }
+      .callout { background: var(--bg); border: 1px solid var(--line); padding: 5pt 9pt; margin: 6pt 0 0; }
+      .callout h3 { margin: 0 0 1pt; font-size: 10pt; }
+      .callout .figure { color: var(--accent); font-weight: 700; font-size: 12pt; }
+      .callout .per { color: var(--muted); }
+      p { margin: 0 0 4pt; }
+      ul { margin: 2pt 0 0 14pt; padding: 0; }
+      li { margin: 0 0 2pt; }
+      .fit b { font-weight: 600; }
+      footer { margin-top: 10pt; padding-top: 6pt; border-top: 1px solid var(--line); font-size: 8.6pt; color: var(--muted); }
+      footer b { color: var(--fg); font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <h1>Backdesk</h1>
+    <p class="tagline">Missed-call text-back for Perth trade businesses. Every missed call texted back in seconds. Every quote chased until it's won or dead.</p>
+    <div class="lede">
+      For Perth trade businesses that can't answer every call, Backdesk is a done-for-you back desk. When you can't pick up, the call diverts to us, the caller gets one text from your business within seconds, and we follow up until the job is booked. Every quote you send is chased by text and email until it's won or dead. Run by AI, checked by a human, reported in dollars. <strong>If the recovered quote value doesn't beat 3× the fee in 90 days, you don't pay until it does.</strong>
+    </div>
+
+    <h2>How it works</h2>
+    <div class="steps">
+      <div><b>1. Free Quote Leakage Audit</b>One A4 page from your own ServiceM8 data: quotes sent in the last 90 days, value never followed up, estimated recoverable range. You see the number before you decide.</div>
+      <div><b>2. Set up in 7 days</b>We connect to ServiceM8, give you a Backdesk number your phone diverts to when you can't answer (nothing is recorded), and write the text-back and follow-up templates in your voice. You approve every one.</div>
+      <div><b>3. Every missed call texted back</b>One text within seconds of the missed call, from your business, then two human-approved follow-ups inside business hours until the job is booked or the lead is closed. Urgent and hot replies go to your phone straight away. A repeat caller is never texted twice.</div>
+      <div><b>4. Every open quote chased, reported in dollars</b>Five touches over three weeks, SMS and email, every message checked by a person before it sends, with opt-out on every one. One page a month: calls caught, leads, jobs booked, quotes chased, revenue recovered, fees paid, multiple returned.</div>
+    </div>
+
+    <h2>Pricing (AUD, ex GST)</h2>
+    <table class="pricing">
+      <thead><tr><th></th><th>Call Catcher</th></tr></thead>
+      <tbody>
+        <tr><td class="label">Monthly</td><td class="price">$397 / month</td></tr>
+        <tr><td class="label">Setup</td><td>None. First 30 days free.</td></tr>
+        <tr><td class="label">Included</td>
+          <td>Your own divert number. Every missed call texted back within seconds, from your business. Two human-approved follow-ups to each missed caller, then closed. Every new quote chased on the 5-touch sequence until won or dead. Urgent and hot replies to your phone. One page a month: calls caught, leads, jobs booked, recovered quote revenue.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <h3>Free Trial</h3>
+      <p><span class="figure">$0</span> <span class="per">first 30 days</span></p>
+      <p>Divert your missed calls to us and run the first 30 days free. At the end you see the report: calls caught, texts sent, leads, jobs booked. Stay on if it paid for itself; walk away if it didn't, nothing owed.</p>
+    </div>
+
+    <h2>The guarantee, precisely</h2>
+    <p>If the recovered quote value we attribute in your first 90 days is not more than 3× the monthly fees you paid in that period, the service is free until it is. Attribution is agreed before we start: a job counts when it is won after one of our follow-ups, and every report shows the figure two ways, gross and conservative (net of the win rate you already had before we connected). We deliberately count low.</p>
+
+    <h2>Terms</h2>
+    <p>Month to month, no lock-in. Billed monthly by card from day 31. Cancel any time in writing, effective at the end of the month, from either side. Prices exclude GST. The client agreement is in plain English and you keep the data.</p>
+
+    <h2>Your customers, your name</h2>
+    <ul>
+      <li>Texts and follow-ups come from your business, in your voice, using templates you approved. Prices and dates are taken from ServiceM8 exactly; a message that changes them does not send.</li>
+      <li>Every SMS and email identifies your business and carries an opt-out. Follow-ups stay inside business hours, Perth time; only the instant text-back goes out whenever the call came in. Any customer can be stopped the same day, by you or by them.</li>
+      <li>Every message is drafted by AI and checked by a person before it goes, and that is disclosed. Complaint and opt-out rates are tracked as a first-class number; above 5% of contacts we stop and call you.</li>
+      <li>Nothing is recorded on the call. Your quote data, call records and our logins are held in Sydney; email and AI providers process message content outside Australia, SMS goes through an Australian provider. Full privacy notice at backdesk.com.au/privacy.</li>
+    </ul>
+
+    <h2>A good fit</h2>
+    <p class="fit">Perth, 1–10 staff, owner-run, on ServiceM8, missing calls because you are on the tools: plumbing, electrical, HVAC, locksmiths, solar, patios, painting, landscaping, small builders. Emergency and after-hours trades fit best. <b>Not a fit:</b> anyone wanting lead generation. We catch the calls and chase the quotes you already have.</p>
+
+    <footer>
+      <b>Hesam Abbaszadi, Founder · 0491 578 888 · hello@backdesk.com.au · backdesk.com.au</b><br />
+      Backdesk · ABN 00 000 000 000 · Perth WA · Start with the free audit: backdesk.com.au/audit
+    </footer>
+  </body>
+</html>

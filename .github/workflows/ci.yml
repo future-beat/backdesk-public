@@ -1,0 +1,233 @@
+name: CI
+
+# The enforcement point for ONB-05. The dev machine has no Docker, so the local
+# Supabase stack — and therefore the two-tenant leak test in its intended
+# fresh-database form — only ever runs here. A red job blocks the change.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: typecheck, lint, migrate, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # Actions pinned to major versions from official orgs only (threat T-04-05).
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Static gates run before the stack boots: a type error or a banned import
+      # should fail in seconds, not after a five-minute Docker pull.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint . --max-warnings=0
+
+      # WR-07: `tsc --noEmit` is not `next build`. Whole classes of failure are
+      # invisible to the typechecker and fatal on Vercel — a server-only import
+      # pulled into a client component graph, a 'use client' boundary violation,
+      # a Server Component reading cookies() in a statically-rendered segment, a
+      # route that fails prerendering, a Turbopack config error. For a project
+      # whose deploy target is Vercel, "it typechecks" is not "it deploys".
+      #
+      # Runs before the Supabase stack so it fails in seconds rather than after
+      # a Docker pull. The placeholder credentials are the point as well as a
+      # convenience: they prove the lazy env parsing in src/core/shared/env.ts
+      # keeps a credential-free build possible, so a future eager `parse()` at
+      # module scope fails here instead of in a deploy.
+      - name: Build
+        run: npx next build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://build.invalid
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-only-not-a-secret
+
+      - name: Secret scan — service-role key must not be reachable from the console
+        run: |
+          # The service-role key bypasses RLS. It belongs to scripts/, tests/ and
+          # src/db/repository/ only; anything under src/app can end up in a client
+          # bundle (threat T-04-03).
+          if grep -RIn 'SUPABASE_SERVICE_ROLE_KEY' src/app; then
+            echo "::error title=Service-role key referenced under src/app::This key bypasses RLS and must never be reachable from console code. Move the access behind src/db/repository."
+            exit 1
+          fi
+          echo "OK — no service-role reference under src/app"
+
+      - name: Secret scan — no environment file is tracked
+        run: |
+          tracked="$(git ls-files | grep -E '^\.env' | grep -v '^\.env\.example$' || true)"
+          if [ -n "$tracked" ]; then
+            echo "::error title=Environment file committed::$tracked"
+            exit 1
+          fi
+          echo "OK — no tracked .env files"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          # Pinned to the devDependency in package.json. A floating CLI version
+          # changes the Postgres image under the migrations without a commit.
+          version: 2.115.0
+
+      - name: Start local Supabase stack
+        run: supabase start
+
+      - name: Export local stack environment
+        run: |
+          set -eu
+          supabase status -o env > /tmp/supabase.env
+          # Names only — the values are the CLI's throwaway local credentials, but
+          # there is no reason to print them (threat T-04-04).
+          echo "Variables reported by supabase status:"
+          cut -d= -f1 /tmp/supabase.env
+          set -a
+          . /tmp/supabase.env
+          set +a
+          : "${API_URL:?API_URL missing from supabase status output}"
+          : "${ANON_KEY:?ANON_KEY missing from supabase status output}"
+          : "${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY missing from supabase status output}"
+          # The CLI-default direct connection. Both URLs point here: the local
+          # stack has no separate transaction pooler (config.toml db.pooler is off).
+          DB="${DB_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "DATABASE_URL=$DB"
+            echo "MIGRATE_DATABASE_URL=$DB"
+            # Dummy operator credentials. The suites create this user through the
+            # admin API against a database that is destroyed with the runner, so
+            # no repository secret is needed for any of this.
+            echo "OPERATOR_EMAIL=operator@ci.invalid"
+            echo "OPERATOR_PASSWORD=ci-operator-password-not-a-secret"
+            # Dummy alert credentials. REQUIRED members of serverEnvSchema since
+            # 02-04, so tests/helpers/env.ts refuses to start a run without them.
+            # The values are deliberately fake: no suite ever sends email —
+            # tests/sync-failure-alerts.test.ts injects an onAlert spy, so the
+            # Resend send path is never reached — and the reserved `.invalid` TLD
+            # is undeliverable by definition. Never replace these with real
+            # credentials here; a suite that genuinely needs to send takes a
+            # repository secret, not an inline value in a public file.
+            echo "RESEND_API_KEY=re-ci-not-a-secret"
+            echo "OPERATOR_ALERT_EMAIL=alerts@ci.invalid"
+            # Dummy crypto material — the remaining REQUIRED members of
+            # serverEnvSchema. CREDENTIALS_ENCRYPTION_KEY must be base64 that
+            # decodes to exactly 32 bytes (the plaintext here is
+            # "ci-only-key-not-a-secret-32bytes"); it only ever encrypts
+            # throwaway test rows in a database destroyed with the runner.
+            # SYNC_TICK_SECRET and CADENCE_TICK_SECRET each need 32+ characters
+            # and each guards a route that only exists inside this runner. They
+            # are two distinct dummies because they are two distinct variables in
+            # production — a shared CI value would let a route that read the
+            # wrong one pass here and 401 in production.
+            echo "CREDENTIALS_ENCRYPTION_KEY=Y2ktb25seS1rZXktbm90LWEtc2VjcmV0LTMyYnl0ZXM="
+            echo "SYNC_TICK_SECRET=ci-sync-tick-secret-not-a-secret-32chars"
+            echo "CADENCE_TICK_SECRET=ci-cadence-tick-secret-not-a-secret-32ch"
+            # The four Phase 4 bearers (04-01) — also REQUIRED members of
+            # serverEnvSchema, so the gate in tests/helpers/env.ts throws before
+            # any suite runs without them. FOUR DISTINCT DUMMIES, for the same
+            # reason the two tick secrets are distinct: they are four distinct
+            # variables in production, and a shared CI value would let a handler
+            # that read the wrong one pass here and 401 in production. Each is
+            # 64 characters — the shape `openssl rand -hex 32` produces, so a
+            # length assumption that holds in production also holds here rather
+            # than only clearing the schema's 32-character floor.
+            #
+            # Fake is safe: no suite calls ClickSend (senders take a TouchSender
+            # and the tests inject a stub) and no suite mints a real unsubscribe
+            # link, so none of these ever authenticates against anything.
+            echo "CLICKSEND_WEBHOOK_SECRET=ci-clicksend-webhook-not-a-secret-000000000000000000000000000000"
+            echo "CLICKSEND_DLR_SECRET=ci-clicksend-dlr-not-a-secret-0000000000000000000000000000000000"
+            echo "UNSUBSCRIBE_SIGNING_SECRET=ci-unsubscribe-signing-not-a-secret-0000000000000000000000000000"
+            echo "MESSAGING_RECONCILE_SECRET=ci-messaging-reconcile-not-a-secret-0000000000000000000000000000"
+            # The sixth bearer (06-02, CON-04) — the nightly stalled-draft
+            # digest route. Same rules, same shape, its own distinct dummy. No
+            # suite mails anything: the digest runner takes an injected sender.
+            echo "STALLED_DIGEST_SECRET=ci-stalled-digest-not-a-secret-00000000000000000000000000000000"
+            # The Phase 9 public-intake pair (09-01) — REQUIRED members of
+            # serverEnvSchema, so tests/helpers/env.ts refuses to start a run
+            # without them. Fake is safe and deliberately so: no suite calls
+            # ClickSend (tests/audit-request-notify.test.ts mocks sendSms), so
+            # this number is never texted, and +61400000000 is not an allocated
+            # handset. The salt is 64 characters — the `openssl rand -hex 32`
+            # shape — and its own distinct dummy, for the reason the four Phase 4
+            # bearers are distinct: a shared CI value would let code that read
+            # the wrong variable pass here and misbehave in production. Nothing
+            # in a suite verifies a hash produced with it against production.
+            echo "OPERATOR_ALERT_PHONE=+61400000000"
+            echo "AUDIT_IP_HASH_SALT=ci-audit-ip-hash-salt-not-a-secret-00000000000000000000000000000"
+            # The Phase 15 caller pepper (15-02) — fake is safe: no suite compares a hash to production.
+            # Its own distinct 64-character dummy, so code reading the wrong variable cannot pass here.
+            echo "CALLER_PSEUDONYM_PEPPER=ci-caller-pseudonym-pepper-not-a-secret-000000000000000000000000"
+            # The Phase 11 telephony quartet (11-01) — REQUIRED members of
+            # serverEnvSchema. FOUR DISTINCT DUMMIES, for the Phase 4 reason: a
+            # shared CI value would let a route that read the wrong variable pass
+            # here and 401 (or fail every signature) in production. The SID is
+            # `AC` + 32 zeros because the schema checks its shape; the other
+            # three are 64 characters, the `openssl rand -hex 32` shape — and
+            # the two route tokens are 64 LOWER-CASE HEX, because the schema
+            # now refuses anything else (WR-04: the token sits inside the URL
+            # Twilio signs). Fake is safe: no suite calls Twilio — the route
+            # suites sign their own fixtures with node:crypto and mock the
+            # repository.
+            echo "TWILIO_ACCOUNT_SID=AC00000000000000000000000000000000"
+            echo "TWILIO_AUTH_TOKEN=ci-twilio-auth-token-not-a-secret-000000000000000000000000000000"
+            echo "TWILIO_VOICE_WEBHOOK_SECRET=ca11ab1e00000000000000000000000000000000000000000000000000000000"
+            echo "TWILIO_VOICE_STATUS_WEBHOOK_SECRET=57a7c0de00000000000000000000000000000000000000000000000000000000"
+            # APP_BASE_URL belongs with the two above it: chooseEmailSender
+            # (04-05) REFUSES to arm the real email delegate unless the API key,
+            # the signing secret AND a base URL are all present, because a
+            # localhost unsubscribe link in a customer inbox is a Spam Act
+            # breach every test would pass. Without it,
+            # tests/routing-dispatch.test.ts gets a StubSender exactly where it
+            # armed Resend, so the CR-01 per-tenant activation fix (04-08)
+            # cannot be proven here.
+            #
+            # Its absence was SILENT rather than loud: unlike everything above,
+            # APP_BASE_URL is optional() in serverEnvSchema, so the gate in
+            # tests/helpers/env.ts has nothing to refuse on and the run reaches
+            # the suites with the variable simply missing.
+            #
+            # Fake is safe: it need only satisfy z.url() (hence the full
+            # https:// scheme, not a bare hostname), no suite sends email so the
+            # Resend HTTP path is never reached, and the reserved `.invalid` TLD
+            # is unreachable by definition — the same rationale as the
+            # alerts@ci.invalid address above.
+            echo "APP_BASE_URL=https://ci.invalid"
+          } >> "$GITHUB_ENV"
+
+      # WR-08: the hardened path, not `npx drizzle-kit migrate`. The CLI exits 0
+      # when the connection drops mid-run — success on a database where nothing
+      # was applied. scripts/migrate.mjs drives drizzle-orm's programmatic
+      # migrator against the SAME journal and the SAME tracking table, retries
+      # only genuinely transient failures, and reports the journal count it ended
+      # on. One migration entry point for CI and for a developer migrating the
+      # hosted Sydney project.
+      - name: Apply migrations to the fresh stack
+        run: npm run db:migrate
+
+      - name: Test suite (leak + RLS coverage are blocking)
+        # tests/rls-coverage.test.ts asserts the tenants tables are present, so a
+        # migrate step that silently applied nothing cannot pass this suite.
+        run: npx vitest run
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop --no-backup

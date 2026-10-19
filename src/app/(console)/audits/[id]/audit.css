@@ -1,0 +1,297 @@
+/*
+ * The Quote Leakage Audit report sheet (D-11, 02-UI-SPEC Screen 5).
+ *
+ * ── WHY THIS IS NOT IN globals.css ──────────────────────────────────────────
+ *
+ * Every rule here is scoped to one page and half of it is `@media print`. Put in
+ * globals.css it would be parsed on the login screen and every console route,
+ * and the `@page` rule would apply to printing ANY page in the product. A
+ * page-level global-CSS import is legal in the App Router and is the smaller
+ * thing.
+ *
+ * ── THE ARTIFACT THIS FILE EXISTS TO PRODUCE ────────────────────────────────
+ *
+ * One A4 page, opened on a phone in a sales meeting and printed to PDF. The
+ * whole layout budget is spent on four figures and two footnotes; anything that
+ * pushes it to a second page is a design failure, because page two of a
+ * one-page audit is where the prospect stops reading.
+ */
+
+.audit-sheet {
+  /* 42rem: the measure the figure grid and the footnote both read well at. */
+  max-width: 42rem;
+  margin: 0 auto;
+  padding-top: 3rem; /* 2xl */
+}
+
+/*
+ * ── THE LETTERHEAD (logo v2, 19 Sep 2026) ───────────────────────────────────
+ *
+ * This sheet is handed to a PROSPECT, and until now the only thing on it that
+ * said who produced it was the ABN line at the foot. The lockup goes at the top
+ * of the document, above the title, where a letterhead goes.
+ *
+ * TWO <img> ELEMENTS TOGGLED BY `display`, AND NOT THE `<picture>` THE NAV AND
+ * THE MARKETING HEADER USE. That is the whole design decision in this block, it
+ * cost the second PNG on the wire, and it was MEASURED rather than argued.
+ *
+ * The supplied lockups are transparent, so the sheet needs the Graphite drawing
+ * on a light ground and the Paper drawing on a dark one — and a printed page is
+ * always a light ground, even when the browser is still reporting dark mode
+ * (which it does; that is the entire reason the block below re-declares the
+ * tokens). Printed through Chrome's `Page.printToPDF` with the scheme forced to
+ * dark, `<picture>` + `media="(prefers-color-scheme: dark)"` — the nav's exact
+ * pattern — selects the PAPER lockup and prints a white drawing on white paper.
+ * A near-invisible wordmark on the document a prospect is holding, and nothing
+ * in the product would ever have reported it.
+ *
+ * `media="screen and (prefers-color-scheme: dark)"` fixes it in Chromium — also
+ * measured — but it makes the printed identity depend on an engine re-running
+ * source selection for the print layout, which WebKit makes no promise about,
+ * and this page is opened on an iPhone in a sales meeting. `display` inside
+ * `@media print` is the most boring mechanism available and cannot be got wrong
+ * by an engine. So: both drawings in the markup, exactly one displayed, ever.
+ *
+ * The price is one extra ~34 KB PNG fetched on a page that is behind the auth
+ * gate, operator-only and on no performance budget (LAND-06 is scoped to the
+ * public landing page). It buys a guarantee about the artifact, which is what
+ * this file exists to produce.
+ */
+.audit-lockup {
+  margin: 0 0 1.5rem; /* lg */
+}
+
+/*
+ * THIS RULE SETS SIZE AND NOT `display`, AND THAT IS A BUG FIX, NOT A STYLE.
+ *
+ * It said `display: block` first. `.audit-lockup img` is specificity (0,1,1)
+ * and the two modifiers below are (0,1,0), so the descendant selector beat both
+ * of them and BOTH drawings rendered — in every scheme and on paper. The
+ * printed sheet carried the Graphite lockup with the Paper one ghosting
+ * underneath it, and the test asserting `.audit-lockup-dark { display: none }`
+ * passed the whole time, because the rule was there; it just never won. Caught
+ * by printing the sheet and looking at it.
+ *
+ * So `display` is owned by the two modifiers alone, at equal specificity, and
+ * source order decides. Do not reintroduce a `display` here.
+ */
+.audit-lockup img {
+  /* The marketing header's pair exactly (147 / 5.236 = 28): the sheet is 42rem
+     wide and has room for the same rendering the public site uses, so the two
+     documents a prospect sees carry the identity at one size. */
+  width: 147px;
+  height: 28px;
+}
+
+/* Light is the default and dark is the exception, so a browser that never
+   evaluates the query still gets the readable one. Both are `block` rather
+   than the UA's `inline` so the image sits on its own line as a letterhead. */
+.audit-lockup-light {
+  display: block;
+}
+
+.audit-lockup-dark {
+  display: none;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  .audit-lockup-light {
+    display: none;
+  }
+
+  .audit-lockup-dark {
+    display: block;
+  }
+}
+
+.audit-sheet h1 {
+  margin-bottom: 0.25rem; /* xs */
+}
+
+.audit-subline {
+  margin-top: 0;
+  margin-bottom: 2rem; /* xl */
+}
+
+/*
+ * 2x2 on anything wider than a phone, one column below it. `auto-fit` with a
+ * 12rem floor does that without a media query and without a breakpoint anyone
+ * has to remember: the figures reflow when they stop fitting, which is the
+ * actual condition.
+ */
+.audit-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1.5rem; /* lg */
+  margin: 0 0 2rem; /* xl */
+}
+
+.audit-figure dt {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.25rem; /* xs */
+}
+
+.audit-figure dd {
+  margin: 0;
+  /* Display size — used ONLY here, per the typography rule. */
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+  /* Lining, fixed-width digits (M1 §3): the figures sit in a row and a
+     proportional 1 makes two numbers of the same magnitude look different. */
+  font-variant-numeric: tabular-nums;
+  /* 7-digit figures must not wrap mid-number on a 360px phone. */
+  white-space: nowrap;
+}
+
+/*
+ * The single accent-colored element on the page. Everything else — links,
+ * buttons, badges — is either absent from the printed region or neutral, so
+ * this figure is the only thing the eye lands on first. Spending the accent
+ * twice would spend it zero times.
+ */
+.audit-figure--hero dd {
+  color: var(--accent);
+}
+
+.audit-baseline {
+  margin: 0 0 1.5rem; /* lg */
+}
+
+.audit-method {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0 0 1rem; /* md */
+}
+
+/* `margin: 0`, not a top margin: this is a `<p>`, and a `<p>` that keeps the
+   UA's 1em bottom margin is 14px of zero-ink height at the end of the document —
+   which WebKit gives a whole blank page whenever it lands near a fold (the
+   report's G-07-1). Latent here only because the audit is one short sheet. Zero
+   rather than `1.5rem 0 0` because `.audit-method`'s bottom margin already
+   supplies the 16px gap above this rule; a top margin would double it. */
+.audit-footer {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem; /* md */
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Screen-only: the convert control and its heading never touch the artifact. */
+.audit-actions {
+  margin-top: 2rem; /* xl */
+  padding-top: 1.5rem; /* lg */
+  border-top: 1px solid var(--line);
+}
+
+@media print {
+  /*
+   * ── FORCED LIGHT, UNCONDITIONALLY ─────────────────────────────────────────
+   *
+   * The operator's phone is usually in dark mode, and `prefers-color-scheme`
+   * still reports dark while printing. Without this the audit prints as light
+   * grey text on a dark background — or, on printers that drop backgrounds,
+   * near-white text on white paper. Re-declaring the tokens rather than
+   * overriding each rule means every rule above inherits the print palette.
+   *
+   * `--fg` IS GRAPHITE, THE BRAND'S OWN DARK (logo v2, 19 Sep 2026). It was
+   * #16181d, which is neither Ink nor Graphite — a near-black somebody picked
+   * for print contrast before the palette had a dark of its own. #1A1F2B is the
+   * value in logo/README.txt and the one `globals.css` now paints the screen in,
+   * so the sheet the client holds and the screen it was read on are finally the
+   * same colour. The contrast cost is nil and it is COMPUTED, not asserted here:
+   * 16.47:1 on white against #16181d's 17.76:1, both an order of magnitude
+   * past the 4.5:1 floor. tests/brand-tokens.test.ts does the arithmetic.
+   */
+  :root {
+    --bg: #ffffff;
+    --fg: #1A1F2B;
+    --muted: #3d424e;
+    --line: #c9ced6;
+    /* Recovered green, not the pre-M1 blue: the printed figure is the one place
+       this document spends colour, and it must be the brand's (D-04, D-07). */
+    --accent: #1B7A4A;
+  }
+
+  html,
+  body {
+    background: #ffffff;
+    color: #1A1F2B;
+  }
+
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  /* Console chrome and every control: operator context, not the document. */
+  .nav,
+  .audit-actions,
+  .audit-backlink,
+  .audit-keyline,
+  button,
+  form {
+    display: none !important;
+  }
+
+  main {
+    padding: 0;
+    max-width: none;
+  }
+
+  .audit-sheet {
+    max-width: none;
+    padding-top: 0;
+  }
+
+  /*
+   * THE LETTERHEAD ON PAPER: always the Graphite drawing, sized in MILLIMETRES.
+   *
+   * The scheme toggle is reversed here unconditionally — see the long note on
+   * `.audit-lockup` for why the switch is `display` and not `<picture>`. A
+   * browser printing from a dark-mode phone still reports dark, so without
+   * these two lines the Paper lockup goes onto white paper.
+   *
+   * 32mm against logo/README.txt's 24mm floor, on a 182mm text column (A4 less
+   * the 14mm margins) — a sixth of the measure, which is a letterhead rather
+   * than a banner. `height: auto` rather than a second millimetre figure: the
+   * image is loaded long before print, so the browser uses the source's exact
+   * 1508:288 and no rounding is introduced at the size that has a legal floor.
+   */
+  .audit-lockup-light {
+    display: block;
+  }
+
+  .audit-lockup-dark {
+    display: none;
+  }
+
+  .audit-lockup img {
+    width: 32mm;
+    height: auto;
+  }
+
+  /*
+   * The one place background/color forcing is asked for. Browsers strip colour
+   * from print by default and this figure is the point of the page; nothing
+   * else on the sheet requests the exemption.
+   */
+  .audit-figure--hero dd {
+    color: var(--accent);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Nothing may break across the fold — a figure split from its label reads as
+     two different numbers. */
+  .audit-figures,
+  .audit-figure,
+  .audit-method,
+  .audit-footer {
+    break-inside: avoid;
+  }
+}

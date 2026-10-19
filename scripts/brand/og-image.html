@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <title>Backdesk — Open Graph image source</title>
+
+    <!--
+      RENDERED ONCE, ON A WORKSTATION, BY scripts/brand/render-brand-assets.sh.
+
+      This page is never served. It exists so that public/brand/og-image.png is
+      a committed static file rather than something a request renders (LAND-06),
+      and so the composition can be re-rendered when the tagline or the lockup
+      changes instead of being redrawn by hand in an image editor.
+
+      The Google Fonts link below is the reason this file lives under scripts/
+      and not under src/ or public/: it is a third-party request, which is fine
+      once on a laptop and forbidden on any page a visitor loads (D-18).
+      `display=block` makes the render wait for Inter rather than screenshotting
+      the fallback font.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=block"
+      rel="stylesheet"
+    />
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      /*
+       * Exactly 1200x630 — the size every link preview crops to if it is not.
+       * Paper background, always light: an OG image is composited onto someone
+       * else's surface and has no colour scheme of its own.
+       */
+      body {
+        box-sizing: border-box;
+        width: 1200px;
+        height: 630px;
+        padding: 80px;
+        background: #fafaf7;
+        color: #1a1f2b;
+        font-family: Inter, system-ui, sans-serif;
+        display: flex;
+        flex-direction: column;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /*
+       * The supplied lockup, not a redraw (logo v2, 19 Sep 2026).
+       *
+       * READ FROM `logo/`, NOT FROM `public/brand/`. This is the 3696x928
+       * OPAQUE lockup, which is deliberately not served: at 93 KB it is the one
+       * v2 file a browser must never fetch (LAND-06), and it is exactly the
+       * right source here because an OG image is composited onto someone else's
+       * surface and is always Paper. This page is rendered once on a laptop, so
+       * reading the source of record directly costs nothing.
+       *
+       * EVERY NUMBER BELOW IS MEASURED, NOT INHERITED. v1's canvas was 1472x540
+       * with its ink at x=160, y=187..349; v2's is 3696x928 with its ink at
+       * x=1108, y=351..563 — a different drawing on a much larger canvas, so
+       * reusing v1's `212px / -73px / -63px` would have put the lockup somewhere
+       * arbitrary. The v2 ink box is 1503x213, an aspect ratio of 7.06 against
+       * v1's 7.09, which is why the composition below lands within a pixel of
+       * the one it replaces.
+       *
+       *   height 279px       -> scale 279/928 = 0.30065
+       *   ink height         -> 213 x 0.30065 = 64.0px  (v1: 64px)
+       *   ink width          -> 1503 x 0.30065 = 452px  (v1: 456px)
+       *   margin-left  -333  -> 1108 x 0.30065 = 333.1  => ink flush to the
+       *                         80px padding edge, as v1's -63px did
+       *   margin-top   -105  -> 351 x 0.30065 = 105.5   => ink top on that edge
+       *   margin-bottom -35  -> the box would otherwise end 174px down, leaving
+       *                         110px of canvas below the ink; -35 leaves the
+       *                         75px v1 left there as clear space (the brand
+       *                         asks for the mark's height, 45px at this scale)
+       *                         and returns the other 35px to the tagline's box.
+       *
+       * The bleed off the left edge is invisible because the lockup's canvas is
+       * #FAFAF7 to the byte — the same Paper this page is painted in.
+       */
+      .lockup {
+        flex: none;
+        align-self: flex-start;
+        height: 279px;
+        width: auto;
+        margin: -105px 0 -35px -333px;
+      }
+
+      /*
+       * The one promise, vertically centred in whatever is left between the
+       * lockup and the domain. 900px is what breaks it to two lines.
+       */
+      .tagline {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        margin: 0;
+        max-width: 900px;
+        font-size: 64px;
+        font-weight: 600;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+      }
+
+      /* Slate, quiet, bottom-right. Nothing else is on this image. */
+      .url {
+        flex: none;
+        margin: 0;
+        text-align: right;
+        font-size: 28px;
+        font-weight: 400;
+        color: #5b6470;
+      }
+    </style>
+  </head>
+
+  <body>
+    <img class="lockup" src="../../logo/backdesk-lockup-on-paper.png" alt="" />
+    <p class="tagline">Every missed call texted back in seconds.</p>
+    <p class="url">backdesk.com.au</p>
+  </body>
+</html>

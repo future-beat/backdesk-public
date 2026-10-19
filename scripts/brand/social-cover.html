@@ -1,0 +1,86 @@
+<!doctype html>
+<!--
+  Social cover artwork (logo/social-v2), rebuilt as a parameterised page so the
+  covers can be re-rendered whenever the tagline changes (first time: 17 Oct
+  2026, "Every missed call texted back in seconds.").
+
+  Query string:
+    w, h          canvas size in px (the screenshot window is set to the same)
+    bg            paper | graphite
+    layout        stack (lockup above tagline, both centred)
+                  side  (lockup left, tagline to its right on one line)
+    lockupW       lockup width in px
+    lockupCY      lockup vertical centre, fraction of h
+    lockupX       side layout only: lockup left edge in px
+    tagY          stack layout only: tagline vertical centre, fraction of h
+    tagSize       tagline font size in px
+    tag           the tagline (defaults to the brand TAGLINE below)
+
+  Render (per asset, see scripts/brand/render-social-covers.sh):
+    Chrome --headless --screenshot=<out.png> --window-size=W,H \
+           --force-device-scale-factor=1 --virtual-time-budget=4000 \
+           "file://…/social-cover.html?w=1640&h=624&bg=graphite&layout=stack&…"
+
+  Lockups are the supplied logo v2 PNGs in logo/ (paper-on-transparent for a
+  graphite canvas, graphite-on-transparent for a paper canvas). Tagline set in
+  Archivo 400 as the logo README specifies; Archivo is loaded from Google
+  Fonts, so rendering needs the network once per run. No green anywhere.
+-->
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <title>Backdesk social cover</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400&display=block" rel="stylesheet" />
+    <style>
+      html, body { margin: 0; padding: 0; overflow: hidden; }
+      body { font-family: Archivo, -apple-system, "Helvetica Neue", Arial, sans-serif; }
+      #c { position: relative; }
+      #lockup { position: absolute; display: block; }
+      #tag { position: absolute; white-space: nowrap; letter-spacing: -0.005em; line-height: 1; }
+    </style>
+  </head>
+  <body>
+    <div id="c"><img id="lockup" alt="" /><div id="tag"></div></div>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const num = (k, d) => (q.has(k) ? Number(q.get(k)) : d);
+      const w = num('w', 1640), h = num('h', 624);
+      const bg = q.get('bg') === 'paper' ? 'paper' : 'graphite';
+      const layout = q.get('layout') === 'side' ? 'side' : 'stack';
+      const lockupW = num('lockupW', Math.round(w * 0.5));
+      const lockupCY = num('lockupCY', 0.41);
+      const tagSize = num('tagSize', Math.round(h * 0.06));
+      const tag = q.get('tag') || 'Every missed call texted back in seconds.';
+      const PAPER = '#FAFAF7', GRAPHITE = '#1A1F2B';
+      const c = document.getElementById('c');
+      c.style.width = w + 'px'; c.style.height = h + 'px';
+      c.style.background = bg === 'paper' ? PAPER : GRAPHITE;
+      const img = document.getElementById('lockup');
+      img.src = bg === 'paper'
+        ? '../../logo/backdesk-lockup-graphite-transparent.png'
+        : '../../logo/backdesk-lockup-paper-transparent.png';
+      const lockupH = Math.round(lockupW * 288 / 1508);
+      img.style.width = lockupW + 'px'; img.style.height = lockupH + 'px';
+      const t = document.getElementById('tag');
+      t.textContent = tag;
+      t.style.fontSize = tagSize + 'px';
+      t.style.color = bg === 'paper' ? GRAPHITE : PAPER;
+      const cy = Math.round(h * lockupCY);
+      if (layout === 'stack') {
+        img.style.left = Math.round((w - lockupW) / 2) + 'px';
+        img.style.top = Math.round(cy - lockupH / 2) + 'px';
+        const tagY = num('tagY', 0.61);
+        t.style.left = '0'; t.style.width = w + 'px'; t.style.textAlign = 'center';
+        t.style.top = Math.round(h * tagY - tagSize / 2) + 'px';
+      } else {
+        const lockupX = num('lockupX', Math.round(w * 0.115));
+        img.style.left = lockupX + 'px';
+        img.style.top = Math.round(cy - lockupH / 2) + 'px';
+        t.style.left = Math.round(lockupX + lockupW + lockupW * 0.095) + 'px';
+        t.style.top = Math.round(cy - tagSize / 2) + 'px';
+      }
+    </script>
+  </body>
+</html>

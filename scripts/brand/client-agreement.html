@@ -1,0 +1,145 @@
+<!doctype html>
+<!--
+  The standard client agreement (M3), as HTML so the PDF is reproducible from
+  the repo. Replaces the founding-client agreement (DRAFT 1, 8 Sep 2026) on
+  17 Oct 2026 after the founder removed the founding-five offer and settled on
+  one plan: Call Catcher, $397 a month, no setup fee, first 30 days free.
+
+  Render:  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+             --headless --disable-gpu --no-pdf-header-footer \
+             --print-to-pdf=docs/gtm/m3-client-agreement.pdf \
+             "file://$PWD/scripts/brand/client-agreement.html"
+
+  Plain-English draft; NOT legal advice; for review by a lawyer before the
+  first signature. Bracketed items are completed per client. Wording of the
+  service, the guarantee, the processors and retention mirrors the site copy
+  (src/app/(marketing)/copy.ts) and the privacy notice; change them together.
+-->
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <title>Backdesk client agreement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=block" rel="stylesheet" />
+    <style>
+      @page { size: A4; margin: 14mm 16mm 13mm; }
+      body { zoom: 0.93; }
+      :root { --bg: #fafaf7; --fg: #1a1f2b; --muted: #5b6270; --line: #d9dcd3; --accent: #1b7a4a; }
+      html, body { margin: 0; color: var(--fg); background: #fff;
+        font-family: Inter, -apple-system, "Helvetica Neue", Arial, sans-serif; font-size: 9.6pt; line-height: 1.4; }
+      h1 { font-size: 20pt; margin: 0; }
+      .sub { font-size: 12pt; margin: 2pt 0 4pt; }
+      .draft { color: var(--muted); font-size: 8.6pt; margin: 0 0 10pt; }
+      h2 { font-size: 11pt; margin: 11pt 0 3pt; break-after: avoid; }
+      p { margin: 0 0 4pt; }
+      p.cl { padding-left: 2.2em; text-indent: -2.2em; }
+      p.cl b { display: inline-block; width: 2.2em; text-indent: 0; font-weight: 600; }
+      table { width: 100%; border-collapse: collapse; font-size: 9.2pt; margin: 4pt 0 6pt; }
+      th, td { border: 1px solid var(--line); padding: 4pt 7pt; vertical-align: top; text-align: left; }
+      th { background: var(--bg); width: 28%; font-weight: 600; }
+      .sig { display: grid; grid-template-columns: 1fr 1fr; gap: 16pt; margin-top: 8pt; }
+      .sig div { border-top: 1px solid var(--line); padding-top: 6pt; }
+      .sig b { display: block; }
+      .page { break-before: page; }
+    </style>
+  </head>
+  <body>
+    <h1>Backdesk</h1>
+    <p class="sub">Client Agreement</p>
+    <p class="draft">DRAFT 2 · 17 October 2026 · For review by a lawyer before first signature. Plain-English draft; not legal advice. Bracketed items are to be completed per client. Replaces the Founding Client Agreement draft of 8 September 2026.</p>
+
+    <p>This agreement is between Hesam Abbaszadi trading as Backdesk (ABN 00 000 000 000) of Perth WA ("Backdesk", "we") and [Client legal name] (ABN [client ABN]) trading as [Trading name] of [address] ("you"). It starts on the date both parties sign ("Start Date") and is made up of these terms, Schedule 1 (Commercial Terms) and Schedule 2 (Attribution and Reporting Rules).</p>
+
+    <h2>1. What Backdesk does</h2>
+    <p class="cl"><b>1.1</b>We give you a Backdesk phone number and you divert your business line to it when you cannot answer. When a call reaches that number, a short automated greeting tells the caller a text is on its way, the call is not recorded, and within seconds the caller receives one SMS from your business. We then follow up that caller with up to two further messages until the job is booked or the enquiry is closed ("Missed-call text-back").</p>
+    <p class="cl"><b>1.2</b>We also connect to your ServiceM8 account and follow up every open quote you send, by SMS and email, in your business's name and voice, until the quote is won, declined, or the sequence is complete ("Quote chasing"). Together these are "the Service".</p>
+    <p class="cl"><b>1.3</b>The quote sequence is up to five messages over about three weeks per quote, and the missed-call follow-ups are up to two messages over about two days per caller, sent only inside the contact hours in Schedule 1 from message templates you have approved. The instant text-back is the one exception: it goes out whenever the missed call arrives, because the caller has just rung. Every follow-up message is drafted with AI and checked by a person at Backdesk before it is sent; the instant text-back is a fixed template you approved.</p>
+    <p class="cl"><b>1.4</b>Replies that look like a buying signal, an urgent job, a second call from the same number within half an hour, or a question we cannot answer are sent to your escalation phone in Schedule 1. Replies that ask us to stop are honoured immediately and that person is not contacted again through the Service. You may close any enquiry yourself by replying DONE from your own number.</p>
+    <p class="cl"><b>1.5</b>Each calendar month we give you a written report of missed calls caught, texts sent, enquiries opened, jobs booked from them, quotes sent, quotes chased, jobs attributed to Quote chasing and their value shown both gross and conservative, fees paid, and the resulting multiple, prepared under Schedule 2.</p>
+    <p class="cl"><b>1.6</b>The Service does not generate leads, does not place phone calls, and does not contact anyone other than people who have rung your business or requested a quote from you. On your instruction we may create a quote job in your ServiceM8 for an enquiry; we never create one automatically.</p>
+
+    <h2>2. Setup and what we need from you</h2>
+    <p class="cl"><b>2.1</b>Within 7 days of the Start Date we will connect to ServiceM8, give you your Backdesk number and the divert instructions, agree your contact hours and escalation phone, draft your templates and review the last 90 days of open quotes with you. The Service goes live on the day you approve the templates in writing and have made a test call through the divert ("Go-live Date"). Nothing is sent before that.</p>
+    <p class="cl"><b>2.2</b>You will: give us read and write access to your ServiceM8 account by an API key or connection you control; keep job statuses (won, lost) reasonably current in ServiceM8; approve or amend templates within 7 days; answer escalated replies; tell us of any number we should never text (your own staff and suppliers included); and remove the divert before this agreement ends.</p>
+    <p class="cl"><b>2.3</b>You confirm every person we contact through the Service has rung your business or asked it for a quote, so that following up is part of your existing dealing with them, and messages carry your business as sender. We add sender identification and an opt-out to every message and keep an opt-out register. Your carrier may charge you for diverted call minutes; those charges are yours.</p>
+
+    <h2>3. Fees and payment</h2>
+    <p class="cl"><b>3.1</b>Fees are set out in Schedule 1 and exclude GST, which is added at the current rate. There is no setup fee.</p>
+    <p class="cl"><b>3.2</b>Free trial: no monthly fee is charged for the first 30 days from the Go-live Date. The first monthly fee is charged on day 31 and then on the same day each month, in advance, by the debit or credit card you nominate. You authorise us to charge that card for fees due under this agreement. If you end this agreement during the trial you owe nothing.</p>
+    <p class="cl"><b>3.3</b>If a monthly charge fails we will tell you and retry within 7 days; if it still fails we may pause the Service until it is paid.</p>
+
+    <h2>4. The guarantee</h2>
+    <p class="cl"><b>4.1</b>The guarantee period is the 90 days from the first monthly charge. If at the end of that period the conservative recovered value attributed under Schedule 2 is not more than three times the monthly fees you paid for that period, we stop charging monthly fees from the next charge date until the cumulative conservative recovered value since the Go-live Date exceeds three times the cumulative monthly fees paid.</p>
+    <p class="cl"><b>4.2</b>While the guarantee applies the Service continues unchanged and you may still cancel under clause 8. The guarantee does not refund fees already paid and lapses if you suspend our ServiceM8 access, remove the divert, stop approving templates, or the Service is paused at your request for more than 14 days in the period.</p>
+    <p class="cl"><b>4.3</b>Other than clause 4.1, we make no promise about how many calls will be caught or how many quotes or jobs will be won. The figures in an audit or report are counts, estimates and attributions under Schedule 2, not guarantees of revenue. Jobs booked from missed calls are counted in your report; they are not valued in dollars and do not count toward the guarantee.</p>
+
+    <h2>5. Your customers and compliance</h2>
+    <p class="cl"><b>5.1</b>We will identify your business as the sender and include a working opt-out in every SMS and email, honour every opt-out on both channels, send follow-ups only inside your contact hours in Perth time, never text a withheld number, a landline or a number on your do-not-text list, never text the same caller twice for one call, and stop contact with any person the same business day you ask.</p>
+    <p class="cl"><b>5.2</b>Calls to your Backdesk number are not recorded; the greeting says so. We disclose on request, in the email footer and on our website that follow-up messages are drafted with AI and checked by a person. Prices and dates in messages are taken from your ServiceM8 records; a draft that changes them is not sent.</p>
+    <p class="cl"><b>5.3</b>We track opt-out and complaint rates per client. If they exceed 5% of contacts in a month we pause sending and contact you before resuming. Either party may pause the Service for a specific person or for all contacts at any time by written notice; paused days count toward the guarantee period unless clause 4.2 applies.</p>
+    <p class="cl"><b>5.4</b>You are responsible for the accuracy of your quotes and customer details in ServiceM8, for setting and removing the divert, and for what you say to customers directly. We are responsible for the content and timing of messages sent through the Service.</p>
+
+    <h2>6. Data and privacy</h2>
+    <p class="cl"><b>6.1</b>You own your business data and your customers' personal information, including the phone numbers of people who ring your Backdesk number. We use it only to deliver the Service, produce your reports and improve the templates, and we act on your instructions in handling it. We are not a party to any contract between you and your customers.</p>
+    <p class="cl"><b>6.2</b>Our database and logins are hosted in Sydney, Australia (Supabase) and our application runs in Sydney (Vercel). Calls to your Backdesk number are answered through Twilio, which processes call details outside Australia. SMS is sent through ClickSend, an Australian provider. Email delivery (Resend) and AI drafting and classification (Anthropic) process message content outside Australia. We will tell you before changing a provider that handles your customers' data.</p>
+    <p class="cl"><b>6.3</b>We handle personal information in line with the Australian Privacy Principles whether or not the Privacy Act requires us to, keep access to your account limited to the people delivering the Service, publish a privacy notice for the people we text at backdesk.com.au/privacy, and notify you without undue delay of any data breach affecting your data.</p>
+    <p class="cl"><b>6.4</b>Ninety days after an enquiry closes without a booking, we replace the caller's phone number in our records with a one-way code, so the number cannot be read back; enquiries that became jobs are treated the same way no later than twelve months after booking. Opt-out requests are kept for as long as needed to honour them.</p>
+    <p class="cl"><b>6.5</b>On termination we stop sending within one business day, retire your Backdesk number once you confirm the divert is removed, remove our access to ServiceM8, and delete or return your message history and customer contact data within 30 days, keeping only what we need for our records and the aggregated figures in clause 6.6.</p>
+    <p class="cl"><b>6.6</b>We may use figures from your reports in aggregated or de-identified form, combined with other clients, to describe the Service's results generally. Use of your name or identifiable results is governed by clause 7 only.</p>
+
+    <h2>7. Baseline data and case study</h2>
+    <p class="cl"><b>7.1</b>You agree to give us a baseline: your ServiceM8 quote history for the 90 days before the Go-live Date (which we read directly from ServiceM8), so the conservative figure in Schedule 2 can be calculated from your own win rate.</p>
+    <p class="cl"><b>7.2</b>If you tick the case-study box in Schedule 1, you give us permission to publish a case study naming your business and stating the figures from your reports, quotes from you, and a description of how the Service ran. Before publishing we will send you the draft; you may correct facts, remove any quote attributed to you, and ask that customer details be removed. You may not veto the reported figures themselves. If you prefer, the case study may name your trade and suburb instead of your business name. You may withdraw permission at any time before publication.</p>
+
+    <h2>8. Term and ending the agreement</h2>
+    <p class="cl"><b>8.1</b>This agreement runs month to month from the Start Date. Either party may end it for any reason by written notice (email is sufficient), effective at the end of the month in which notice is given. Fees already charged for that month are not refunded; there is no exit fee.</p>
+    <p class="cl"><b>8.2</b>Either party may end it immediately by written notice if the other party seriously breaches it and does not fix the breach within 7 days of being told, or becomes insolvent.</p>
+    <p class="cl"><b>8.3</b>Clauses 6, 7.2 (for a case study already published), 9 and 10 continue after the agreement ends.</p>
+
+    <h2>9. Ownership</h2>
+    <p class="cl"><b>9.1</b>We own the Service, its software, the Backdesk phone numbers, its methods and the structure of the message templates. You own your data, your business name and anything you write yourself. You may keep and reuse the wording of the templates approved for your business after this agreement ends.</p>
+
+    <h2>10. Liability</h2>
+    <p class="cl"><b>10.1</b>Nothing in this agreement excludes rights you have under the Australian Consumer Law that cannot be excluded. To the extent the law allows, our total liability under or in connection with this agreement is limited to the monthly fees you paid in the three months before the claim, and neither party is liable to the other for loss of profit, loss of business or indirect loss.</p>
+    <p class="cl"><b>10.2</b>We are not liable for anything caused by your carrier, ServiceM8 or another third-party service being unavailable, by a divert that was not set or was removed, by inaccurate data in your ServiceM8 account, or by your failure to respond to escalated replies.</p>
+
+    <h2>11. General</h2>
+    <p class="cl"><b>11.1</b>This agreement is governed by the law of Western Australia. It is the whole agreement between us about the Service and replaces the offer sheet and any earlier discussion. Changes must be in writing and agreed by both parties. Neither party may assign it without the other's consent, except that we may assign it to a company we set up to run the Service, on notice to you. Notices go to the email addresses in Schedule 1.</p>
+
+    <h2>Signatures</h2>
+    <div class="sig">
+      <div><b>Backdesk</b>Hesam Abbaszadi, sole trader trading as Backdesk<br />Signature: ______________________ &nbsp; Date: __________</div>
+      <div><b>Client</b>[Name], [position] for [Client legal name]<br />Signature: ______________________ &nbsp; Date: __________</div>
+    </div>
+
+    <h2 class="page">Schedule 1 · Commercial Terms</h2>
+    <table>
+      <tr><th>Plan</th><td>Backdesk Call Catcher</td></tr>
+      <tr><th>Monthly fee</th><td>$397 per month ex GST</td></tr>
+      <tr><th>Setup fee</th><td>None</td></tr>
+      <tr><th>Free trial</th><td>No monthly fee for the first 30 days from the Go-live Date; first charge on day 31</td></tr>
+      <tr><th>Payment</th><td>Debit or credit card, charged monthly in advance from day 31</td></tr>
+      <tr><th>Start Date</th><td>[date both parties sign]</td></tr>
+      <tr><th>Go-live Date</th><td>[date templates approved and the test call made; to be recorded by email]</td></tr>
+      <tr><th>Backdesk number</th><td>[the Backdesk divert number issued to the client]</td></tr>
+      <tr><th>Contact hours</th><td>[e.g. Mon–Fri 8:00–17:00, Perth time; no public holidays]</td></tr>
+      <tr><th>After-hours escalation</th><td>[on / off: whether urgent enquiries outside contact hours are sent to the escalation phone at once or held until the next morning]</td></tr>
+      <tr><th>Escalation phone</th><td>[tradie's mobile]</td></tr>
+      <tr><th>Numbers never to text</th><td>[the client's own lines, staff, suppliers; or "none"]</td></tr>
+      <tr><th>Notices</th><td>Backdesk: hello@backdesk.com.au · Client: [email]</td></tr>
+      <tr><th>ServiceM8 access</th><td>[API key held by client / connection method]</td></tr>
+      <tr><th>Customers not to contact</th><td>[list or "none"]</td></tr>
+      <tr><th>Case study (clause 7.2)</th><td>[ ] Yes, named &nbsp; [ ] Yes, trade and suburb only &nbsp; [ ] No</td></tr>
+    </table>
+
+    <h2>Schedule 2 · Attribution and Reporting Rules</h2>
+    <p class="cl"><b>S2.1</b>A quote is chased when at least one message under Quote chasing has been sent for it. A job is attributed to Quote chasing when the quote is marked won in ServiceM8 within 30 days of the last message we sent for it. A quote is attributed at most once; if it is later edited or reversed in ServiceM8 the report shows a discrepancy note rather than a silent change.</p>
+    <p class="cl"><b>S2.2</b>Gross recovered value is the total value of attributed jobs, using the quote value at the time of attribution.</p>
+    <p class="cl"><b>S2.3</b>Baseline win rate is the share of your quotes marked won in the 90 days before the Go-live Date, measured from ServiceM8 when we connect. If fewer than 10 quotes exist in that period, a baseline of 70% is assumed. The baseline is fixed for the life of this agreement unless both parties agree to re-measure it.</p>
+    <p class="cl"><b>S2.4</b>Conservative recovered value is gross recovered value multiplied by (1 minus the baseline win rate). It credits Quote chasing only with the share of attributed value above what your existing win rate would be expected to produce. This is the figure used for the guarantee in clause 4.</p>
+    <p class="cl"><b>S2.5</b>Missed calls are reported as counts: calls caught, texts sent and delivered, enquiries opened, enquiries that became a job (whether we created the job on your instruction or you booked it yourself within 14 days of the call), and the median and slowest times from call to text. These counts are shown with their denominators and are never converted into dollars or added to the recovered value.</p>
+    <p class="cl"><b>S2.6</b>Every monthly report shows both recovered-value figures side by side, the missed-call counts, the monthly fees paid, and the multiple (conservative recovered value divided by monthly fees). Reports are issued within 7 days of month end, are numbered and frozen; a correction is issued as a new version, never as a silent change.</p>
+    <p class="cl"><b>S2.7</b>Where you dispute an attribution, tell us within 14 days of the report; we will show the message history and ServiceM8 status timeline for that quote and, if the rule in S2.1 is not met, remove it and re-issue the report.</p>
+  </body>
+</html>

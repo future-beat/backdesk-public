@@ -1,0 +1,22 @@
+[
+  {
+    "uuid": "01a036c0-dcbe-7bb1-957b-b1646c16fc4b",
+    "start_date": "2026-08-25 03:00:00",
+    "end_date": "2026-08-25 04:00:00",
+    "active": 1,
+    "activity_was_recorded": 0,
+    "activity_was_automated": 0,
+    "edit_by_staff_uuid": "01a036c0-7ef7-745d-bae7-bb89b4a0995b",
+    "edit_date": "2026-08-25 02:30:04",
+    "job_uuid": "01a036c0-cb42-7bb1-957b-47811dbeeb0b",
+    "staff_uuid": "01a036c0-7ef7-745d-bae7-bb89b4a0995b",
+    "activity_was_scheduled": 1,
+    "has_been_opened": 0,
+    "has_been_opened_timestamp": "0000-00-00 00:00:00",
+    "travel_time_in_seconds": "0",
+    "travel_distance_in_meters": "0",
+    "material_uuid": "",
+    "allocated_timestamp": "2026-08-25 02:30:04",
+    "allocated_by_staff_uuid": "01a036c0-7ef7-745d-bae7-bb89b4a0995b"
+  }
+]

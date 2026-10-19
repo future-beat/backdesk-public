@@ -1,0 +1,14 @@
+[
+  {
+    "uuid": "01a036c0-d29b-7bb1-957a-a0c44c51d91b",
+    "edit_by_staff_uuid": "01a036c0-7ef7-745d-bae7-bb89b4a0995b",
+    "create_date": "2026-08-25 02:30:01",
+    "edit_date": "2026-08-25 02:30:01",
+    "active": 1,
+    "note": "Client has requested a quality WELS 6-star single mixer with chrome finish.",
+    "action_required": "0",
+    "action_completed_by_staff_uuid": "",
+    "related_object": "job",
+    "related_object_uuid": "01a036c0-cb42-7bb1-957b-47811dbeeb0b"
+  }
+]

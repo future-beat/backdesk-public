@@ -1,0 +1,74 @@
+[
+  {
+    "edit_date": "2026-08-25 02:29:59",
+    "active": 1,
+    "job_uuid": "01a036c0-cb42-7bb1-957b-47811dbeeb0b",
+    "first": "John",
+    "last": "Appleseed",
+    "email": "fixture@example.invalid",
+    "phone": "",
+    "mobile": "",
+    "type": "JOB",
+    "uuid": "01a036c0-cb77-7bb1-957b-e9afbc22a52b"
+  },
+  {
+    "edit_date": "2026-08-26 08:14:45",
+    "active": 1,
+    "job_uuid": "01a03d1b-f954-7bb1-957a-bdd5e80f194d",
+    "first": "Sarah",
+    "last": "Dampier",
+    "email": "fixture@example.invalid",
+    "phone": "",
+    "mobile": "0400000000",
+    "type": "JOB",
+    "uuid": "01a03d1b-f966-7bb1-957a-59416cb0308d"
+  },
+  {
+    "edit_date": "2026-08-26 08:16:50",
+    "active": 1,
+    "job_uuid": "01a03d23-2b89-7bb1-957b-726a4bed2ddd",
+    "first": "Marco",
+    "last": "Bellini",
+    "email": "fixture@example.invalid",
+    "phone": "",
+    "mobile": "0400000000",
+    "type": "JOB",
+    "uuid": "01a03d23-2baa-7bb1-957a-82d042400efd"
+  },
+  {
+    "edit_date": "2026-08-26 08:18:02",
+    "active": 1,
+    "job_uuid": "01a03d24-c236-7bb1-957a-649415bbbc5d",
+    "first": "Linh",
+    "last": "Tran",
+    "email": "fixture@example.invalid",
+    "phone": "",
+    "mobile": "0400000000",
+    "type": "JOB",
+    "uuid": "01a03d24-c25f-7bb1-957b-8a4741cd02dd"
+  },
+  {
+    "edit_date": "2026-08-26 08:19:39",
+    "active": 1,
+    "job_uuid": "01a03d26-33bd-7bb1-957b-5d35299f28dd",
+    "first": "Dean",
+    "last": "Hargreaves",
+    "email": "fixture@example.invalid",
+    "phone": "",
+    "mobile": "0400000000",
+    "type": "JOB",
+    "uuid": "01a03d26-33cc-7bb1-957a-441ef577b40d"
+  },
+  {
+    "edit_date": "2026-08-26 08:21:02",
+    "active": 1,
+    "job_uuid": "01a03d27-89f5-7bb1-957a-577e97f4cadd",
+    "first": "Priya",
+    "last": "Nair",
+    "email": "fixture@example.invalid",
+    "phone": "",
+    "mobile": "0400000000",
+    "type": "JOB",
+    "uuid": "01a03d27-8a1b-7bb1-957b-1db6e2773a3d"
+  }
+]

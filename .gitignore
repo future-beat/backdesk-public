@@ -1,0 +1,60 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files — secrets never leave the machine.
+# .env.local holds the Supabase service-role key and DB URLs (see .env.example).
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# GSD agent runtime state (local only)
+.gsd/
+.planning/research/.cache/
+
+# Local tooling and scratch — never part of the repo.
+.claude/launch.json
+.claude/settings.local.json
+.claude/worktrees/
+Claude outputs/
+
+# Marketing kit (written by the Cowork thread). Only the build requests and the
+# Code thread's responses are versioned here; the kits themselves live with marketing.
+docs/gtm/*
+!docs/gtm/requests/
+docs/gtm/requests/*
+!docs/gtm/requests/*.md

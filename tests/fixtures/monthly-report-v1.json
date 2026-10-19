@@ -1,0 +1,83 @@
+{
+  "id": "3f6c2a1e-8b4d-4c7a-9e2f-5d1b7a3c9e4f",
+  "periodStart": "2026-08-01",
+  "periodEnd": "2026-09-01",
+  "timezone": "Australia/Perth",
+  "version": 1,
+  "generatedAt": "2026-09-02T01:30:00.000Z",
+  "figures": {
+    "quotesChased": 42,
+    "replies": 9,
+    "jobsWonAttributed": 2,
+    "jobsWonTotal": 5,
+    "grossCents": 1840000,
+    "conservativeCents": 552000,
+    "feesMonthlyCents": 59700,
+    "feesSetupCents": 0,
+    "multipleConservativeBp": 92462,
+    "multipleGrossBp": 308207,
+    "valueMissingCount": 0
+  },
+  "lines": [
+    {
+      "attributionId": "a1b2c3d4-e5f6-4a7b-8c9d-e0f1a2b3c4d5",
+      "quoteId": "b7e1d9c2-4f3a-4e8b-a6c5-d4e3f2a1b0c9",
+      "generatedJobId": "J1042",
+      "jobDescription": "Replace hot water system, outdoor unit",
+      "contactFirstName": "Fictional",
+      "wonDetectedAt": "2026-08-12T02:15:00.000Z",
+      "touchCount": 2,
+      "firstTouchAt": "2026-08-04T01:00:00.000Z",
+      "lastTouchAt": "2026-08-08T01:00:00.000Z",
+      "replyCount": 1,
+      "replyLabels": ["interested"],
+      "grossCents": 1100000,
+      "conservativeCents": 330000,
+      "valueSource": "mirror"
+    },
+    {
+      "attributionId": "c9d8e7f6-a5b4-4c3d-9e2f-a1b0c9d8e7f6",
+      "quoteId": "d2c3b4a5-f6e7-4d8c-b9a0-e1f2d3c4b5a6",
+      "generatedJobId": "J1057",
+      "jobDescription": "Switchboard upgrade and RCD install",
+      "contactFirstName": "Invented",
+      "wonDetectedAt": "2026-08-26T05:40:00.000Z",
+      "touchCount": 3,
+      "firstTouchAt": "2026-08-15T01:00:00.000Z",
+      "lastTouchAt": "2026-08-22T01:00:00.000Z",
+      "replyCount": 0,
+      "replyLabels": [],
+      "grossCents": 740000,
+      "conservativeCents": 222000,
+      "valueSource": "mirror"
+    }
+  ],
+  "baseline": {
+    "rateBp": 7000,
+    "source": "connect",
+    "sampleSize": 64,
+    "windowStart": "2026-02-01",
+    "windowEnd": "2026-08-01",
+    "prospectRateBp": null
+  },
+  "constants": {
+    "attributionWindowDays": 30,
+    "defaultBaselineWinRate": 0.7,
+    "baselineMinQuotes": 10
+  },
+  "fees": {
+    "monthlyCents": 59700,
+    "setupCents": 0,
+    "daysCharged": 31,
+    "daysInPeriod": 31,
+    "rows": [
+      {
+        "kind": "monthly",
+        "amountCents": 59700,
+        "effectiveFrom": "2026-07-01",
+        "createdAt": "2026-07-01T03:00:00.000Z",
+        "note": null
+      }
+    ]
+  }
+}

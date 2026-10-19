@@ -1,0 +1,59 @@
+-- Migration 0024 — the live-uniqueness guarantee keyed on the UPSTREAM identity (WR-02).
+--
+-- WHY THIS EXISTS:
+-- `cadences_one_live_per_quote` is UNIQUE (quote_id) WHERE status IN
+-- ('active','paused'). `quote_id` is OUR surrogate uuid. Migration 0022 formally
+-- promoted "the quotes row is absent while its cadence survives" from a
+-- corruption to a REACHABLE STATE ("a cadence outliving its quote row is a
+-- reachable state rather than a corruption"), and that is what makes the choice
+-- of key load-bearing rather than incidental.
+--
+-- The route around the constraint:
+--   1. a cadence is live for ServiceM8 job J, via our quotes row Q1;
+--   2. Q1 leaves the mirror (an ops purge — the cause the 0022 text names);
+--   3. the job re-syncs. `run-sync.ts` inserts a NEW quotes row Q2 with a NEW
+--      uuid, so `prev === undefined` and the `type === 'quote_opened' && prev
+--      !== undefined` guard does not suppress the event: a FRESH `quote_opened`
+--      is emitted;
+--   4. its insert conflicts with NEITHER index — different `quote_id`, different
+--      `created_by_event_id` — so a SECOND LIVE CADENCE is created for job J and
+--      two parallel chase sequences reach the same customer.
+--
+-- That is the exact outcome `cadences_one_live_per_quote` exists to prevent,
+-- reached by changing the surrogate the index happens to be keyed on.
+-- `sm8_job_uuid` is the identity that survives a mirror rebuild, and this table
+-- already denormalizes it for precisely that reason.
+--
+-- TENANT-SCOPED, because the job uuid alone is not an identity here: two tenants
+-- may legitimately hold the same ServiceM8 job (the `quotes` uniqueness is
+-- `(tenant_id, sm8_job_uuid)` for the same reason — see tests/webhook-hint.test.ts).
+-- A bare unique on `sm8_job_uuid` would let one client's live cadence block
+-- another client's.
+--
+-- ADDED ALONGSIDE `cadences_one_live_per_quote`, NOT INSTEAD OF IT. The two
+-- coincide whenever the mirror is intact, so keeping both costs one index and
+-- removes any need to argue that the new one covers every case the old one did.
+-- An invariant is not weakened to make a fix land.
+--
+-- ── WHAT THIS DOES TO `cadences.create` ─────────────────────────────────────
+--
+-- `create` uses TARGETLESS `ON CONFLICT DO NOTHING`, which absorbs EVERY unique
+-- constraint on this table (WR-06), so adding one is a change to that
+-- statement's contract and needs the decision made out loud: a conflict here
+-- means "a live cadence already exists for this ServiceM8 job", the consumer
+-- reads zero rows as 'replayed', and the event is consumed. That is correct —
+-- it is the same sentence `cadences_one_live_per_quote` already returns, said
+-- about the identity that outlives a mirror rebuild.
+--
+-- IDEMPOTENT BY CONSTRUCTION. `IF NOT EXISTS` is sufficient here, unlike the
+-- narrowing in 0023: this index has no earlier definition that a skipped CREATE
+-- could leave standing.
+--
+-- SAFETY: verified against the production database before applying — zero rows
+-- grouped `(tenant_id, sm8_job_uuid)` with more than one live cadence, so the
+-- build cannot fail on existing data. Note for later, as in 0021: without
+-- CONCURRENTLY this holds ACCESS EXCLUSIVE on a table the per-minute cron
+-- writes to.
+CREATE UNIQUE INDEX IF NOT EXISTS cadences_one_live_per_job
+  ON public.cadences USING btree (tenant_id, sm8_job_uuid)
+  WHERE status IN ('active', 'paused');

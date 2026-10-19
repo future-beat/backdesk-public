@@ -1,0 +1,875 @@
+/*
+ * THE PUBLIC SITE'S STYLESHEET. Imported by `(marketing)/layout.tsx` and by
+ * nothing else, so not one byte of it reaches a console bundle (D-05).
+ *
+ * Every colour here is a `var(--…)` from the M1 token set in `globals.css`.
+ * A hex literal in this file is a contract violation, not a shortcut: the two
+ * schemes are both mandatory (D-04) and a literal is a value that only got
+ * checked for contrast in one of them.
+ *
+ * GREEN IS RATIONED (D-04, UI-SPEC Color). `--accent` appears below on exactly
+ * four things: the one primary action, standalone dollar figures, text links,
+ * and focus rings. Never chrome, never a border, never a badge.
+ *
+ * NOTHING MOVES. There is no transition, no transform and no animation in this
+ * file, so `prefers-reduced-motion` has nothing to switch off — that is the
+ * design, and it is cheaper to keep than to restore.
+ */
+
+/* ── The shell ─────────────────────────────────────────────────────────── */
+
+/*
+ * The font class lands on a wrapper div rather than on `<body>` (the UI-SPEC
+ * wrote `body.marketing`): with ONE root layout shared with the console, the
+ * body belongs to both halves of the site and only this subtree may be set in
+ * Inter. Same effect, one element lower.
+ *
+ * 17px, not 16: M1 asks for 17-18px on a phone, and the audit sheet this page
+ * sells is read by people who are not reading it indoors.
+ */
+.marketing {
+  font-family:
+    var(--font-inter),
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+/*
+ * The first focusable element on every page (D-19). Off-screen until focused,
+ * then a real, visible control — `display: none` would remove it from the tab
+ * order, which is the one thing it exists to be in.
+ */
+.marketing .skip {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.marketing .skip:focus {
+  left: 20px;
+  top: 8px;
+  width: auto;
+  height: auto;
+  z-index: 10;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--fg);
+  border-radius: 8px;
+  color: var(--fg);
+}
+
+/*
+ * `main` in globals.css is the console's: 20px padding and a 60rem cap, which
+ * would gutter the landing page twice and cap it 4rem narrow. The marketing
+ * pages carry their own gutter on `.wrap`, per section, so the header rule and
+ * the footer rule can run edge to edge while the prose stays at the measure.
+ */
+.marketing main {
+  padding: 0;
+  max-width: none;
+  margin: 0;
+}
+
+.marketing .wrap {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/*
+ * M1 §3: prose never wider than 38em at the body size (~646px).
+ *
+ * IT STARTS AT THE CONTAINER'S EDGE, IT IS NEVER CENTRED (G-09-4).
+ * Until UAT this class shared an element with `.wrap`, so `.wrap`'s
+ * `margin: 0 auto` centred the 38em box in the viewport: on a 1440px screen the
+ * hero's eyebrow, h1, lede and button began ~189px to the RIGHT of every
+ * section heading below them, and the page read as two columns that never
+ * lined up. The measure now nests INSIDE the container, and `margin-left: 0`
+ * states the rule that keeps it there — a future `margin: 0 auto` here is then
+ * a change someone made on purpose, not one they inherited.
+ */
+.marketing .measure {
+  max-width: 38em;
+  margin-left: 0;
+}
+
+/* ── Type ──────────────────────────────────────────────────────────────── */
+
+.marketing h1 {
+  font-size: 2rem;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+}
+
+.marketing h2 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 2rem;
+}
+
+.marketing h3 {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.marketing p {
+  margin: 0 0 1rem;
+}
+
+.marketing .eyebrow,
+.marketing .small {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* Colour is never the only cue (D-19): every link in prose is underlined. */
+.marketing a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/*
+ * ...EXCEPT WHEN THE LINK IS A BUTTON (G-09-2, UAT test 1, 2026-09-10).
+ *
+ * `.marketing a` is specificity (0,1,1) and `.button` in globals.css is (0,1,0),
+ * so the prose rule WON on `<a class="button button--lg">`: the label was
+ * painted `--accent` on the button's `--accent` background and the two green
+ * calls to action on the landing page had no readable text at all. The rule
+ * above is right for prose and wrong for a control, and a link that is a button
+ * is both.
+ *
+ * `.marketing a.button` is (0,1,2) — it beats the prose rule by one class,
+ * inside this file, without touching globals.css (which the console shares) and
+ * without weakening the prose rule for everything else. The declarations are
+ * the ones globals.css already makes; they are restated here only to out-rank a
+ * neighbour, not to define a second button.
+ *
+ * NO NEW GREEN (UI-SPEC C-2/C-3): `--accent-fg` is the label token that has
+ * always paired with the `--accent` background, and `--fg` is what a secondary
+ * button was already specified to use. The rationing count in the header is
+ * unchanged — neither token is `--accent`.
+ */
+.marketing a.button {
+  color: var(--accent-fg);
+  text-decoration: none;
+}
+
+.marketing a.button--secondary {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+/* The existing console convention, applied to every interactive element here. */
+.marketing a:focus-visible,
+.marketing button:focus-visible,
+.marketing input:focus-visible,
+.marketing select:focus-visible,
+.marketing summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/*
+ * The TEXT wordmark. The site header shows the lockup IMAGE instead (C-1); this
+ * rule is the fallback for any marketing surface that renders the name as text,
+ * and it is never green.
+ *
+ * THE REAL WORDMARK IS ARCHIVO 700, LOWERCASE, -0.04em, AND IT IS ALWAYS AN
+ * IMAGE (logo v2, 19 Sep 2026). Archivo is deliberately not downloaded: LAND-06
+ * forbids adding a webfont, and a second face fetched for one word would cost
+ * more than the word is worth. So this fallback is set in the face the site
+ * already loads and matched to v2 on the two things a substitute face can still
+ * honour — the case and the tracking. It will not be the wordmark; it will not
+ * contradict it either, which is the whole job of a fallback.
+ *
+ * `text-transform` rather than lowercase copy in the markup: the business name
+ * is written "Backdesk" everywhere in prose, including logo/README.txt itself.
+ * "Never capitalised" governs the drawing, not the sentence.
+ */
+.marketing .wordmark {
+  font-family: var(--font-inter-tight), Inter, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  text-transform: lowercase;
+  letter-spacing: -0.04em;
+  font-variant-ligatures: none;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+/* ── C-1 Site header ───────────────────────────────────────────────────── */
+
+/*
+ * 64px tall at EVERY breakpoint, and it never wraps: lockup left, one text
+ * link right (E1 overflow). Not sticky — a 64px bar following a thumb up a
+ * pricing table costs more than it gives.
+ *
+ * THE 18px VERTICAL PADDING IS THE WORDMARK'S CLEAR SPACE, NOT A GAP.
+ * logo v2 (19 Sep 2026) asks for clear space equal to the MARK height on all
+ * sides. The supplied transparent lockups are cropped tight (ink at rows 31-243
+ * of 288, mark 150 units tall), so unlike the opaque `backdesk-lockup-on-paper`
+ * they bring almost none of their own: at the 28px render height the mark
+ * measures ~14.6px and the ascenders ~20.7px, while the padding plus the canvas
+ * margin gives ~21.0px above and ~22.3px below — clear of both.
+ * 18 + 28 + 18 = 64.
+ */
+.marketing .site-header {
+  min-height: 64px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+/*
+ * THE GUTTER MOVED INTO THE CONTAINER (G-09-4, UAT 10 Sep 2026).
+ *
+ * The bar's own `padding: 18px 20px` put the lockup 20px from the VIEWPORT edge
+ * while every section below it sat at the `.wrap` edge — 228px in on a 1440px
+ * screen — so the page had two left margins and the eye found neither. The
+ * horizontal half of that padding now belongs to `.wrap`, which is the one
+ * element that knows where the page's edge is; the vertical half is the
+ * wordmark's clear space and stays on the bar, with the border and the
+ * background, so the rule still runs edge to edge.
+ *
+ * The row itself — lockup left, link right — is therefore laid out here rather
+ * than on the bar. `min-height: 64px` stays up there because the bar is what
+ * has to be 64px tall (18 + 28 + 18), and it is border-box like everything else
+ * in this project.
+ */
+.marketing .site-header .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.marketing .lockup-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+/*
+ * SIZED FROM THE WORD, NOT THE CANVAS (D-06: the word renders >= 96px wide).
+ * The word spans x 290-1507 of the 1508px v2 source, 0.808 of it, so 147px puts
+ * the word at ~119px. The height follows the 5.236:1 ratio (147 / 5.236 = 28) —
+ * v2 kept v1's canvas ratio exactly (1508/288 = 1152/220), so the swap moved no
+ * pixel of this layout. The same pair is on the <img> element itself, so nothing
+ * shifts while the PNG loads.
+ */
+.marketing .site-header img {
+  display: block;
+  width: 147px;
+  height: 28px;
+}
+
+/* Two text links side by side (quick-260915-g92): the guide and the audit.
+   Flex so they keep a gap at every width instead of running together on
+   desktop and stacking on phones. */
+.marketing .site-header nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+/* 44px tap target (D-19), Graphite not green: the page keeps ONE green control. */
+.marketing .site-header nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.marketing .site-header nav a:hover,
+.marketing .site-header nav a:focus {
+  text-decoration: underline;
+}
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+
+.marketing section {
+  padding: 48px 0;
+}
+
+.marketing .hero {
+  padding-top: 48px;
+}
+
+.marketing .hero .lede {
+  font-size: 1.0625rem;
+  margin: 0 0 2rem;
+}
+
+.marketing .hero .eyebrow {
+  margin: 0 0 0.5rem;
+}
+
+.marketing .reassurance {
+  margin: 1rem 0 0;
+}
+
+/* ── C-4 Steps ─────────────────────────────────────────────────────────── */
+
+/*
+ * One column at every width: four steps in order is a sequence, and two
+ * columns would invite the eye to read it as a matrix.
+ */
+.marketing ol.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 24px;
+  max-width: 38em;
+}
+
+.marketing ol.steps .step-number {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 0.25rem;
+}
+
+.marketing ol.steps p {
+  margin: 0;
+}
+
+/* ── C-5 Tier cards ────────────────────────────────────────────────────── */
+
+/*
+ * THE GRID IS CAPPED AT THE MEASURE, LIKE EVERYTHING ELSE IN ITS SECTION.
+ *
+ * `1fr 1fr` was never the bug — measured live at 1440px the tracks computed to
+ * `480px 480px`, which is exactly `1fr 1fr` of the FULL container (`.wrap` is
+ * 64rem with a 20px gutter = 984px, less the 24px gap, halved). The bug is that
+ * nothing capped the container the fractions divided. The pricing section's
+ * heading, its paragraphs and its first-30-days `.callout` are all capped at
+ * 38em (646px at the marketing body size of 1.0625rem), so on desktop the right
+ * card overhung that column edge by ~338px and the prices read as misaligned
+ * against every other block on the page (operator report, 2026-09-11, PDF).
+ *
+ * `38em` is the same value `.measure` and `.callout` use, spelled the same way,
+ * and — like `.measure` — it caps a width without centring the box: the
+ * `margin: 0 0 24px` above keeps the grid's left edge on the container's, so
+ * the cards start where the heading starts. With two plans the fractions did
+ * the rest: (646 − 24) / 2 = 311px per card. Since 17 Oct 2026 there is one
+ * plan and no track list at any width, so the one card IS the 646px column,
+ * left edge on the heading's, right edge on the callout's.
+ *
+ * Deliberately NOT inside the 48rem block. Below 48rem the grid is one column
+ * either way, and the cap is inert until the viewport passes ~686px — but in
+ * the 686–768px band the section's prose IS already capped at 38em, so a
+ * desktop-only cap would leave the same overhang on a landscape tablet.
+ */
+.marketing ul.tiers {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  max-width: 38em;
+  display: grid;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.marketing li.tier {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.marketing .price {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/*
+ * The only green text on the page besides the links and the one button:
+ * standalone dollar figures, 700, tabular (M1 §3, D-07).
+ */
+.marketing .price .figure {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.marketing .price .per {
+  color: var(--muted);
+}
+
+/*
+ * Graphite, not green. "No setup fee." states a removal, not a figure being
+ * read, and a second green line in the card would spend the accent (C-5).
+ */
+.marketing .setup {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.marketing .included-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.marketing ul.included {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 8px;
+}
+
+.marketing .terms {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  max-width: 38em;
+  margin: 24px 0 0;
+}
+
+.marketing .caption {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  margin: -1.5rem 0 2rem;
+}
+
+/* ── C-6 Callouts ──────────────────────────────────────────────────────── */
+
+.marketing .callout {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  max-width: 38em;
+}
+
+.marketing .callout p:last-child {
+  margin-bottom: 0;
+}
+
+/* The free-first-month figure reads as a SUB-offer: Heading size, not Display. */
+.marketing .callout .price .figure {
+  font-size: 1.5rem;
+}
+
+/* Graphite border, not green (C-6): the guarantee is the page's most load-bearing
+   paragraph and it is not the page's action. */
+.marketing .callout--guarantee {
+  border-left: 4px solid var(--fg);
+}
+
+/* ── C-7 Site footer ───────────────────────────────────────────────────── */
+
+/*
+ * Same as the header (G-09-4): the top border is the full-width rule, the
+ * horizontal gutter is the container's, and the vertical padding is the bar's.
+ */
+.marketing .site-footer {
+  border-top: 1px solid var(--line);
+  padding: 64px 0 48px;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+/*
+ * `max-width: 64rem` used to live here, when the footer paragraphs had no
+ * container to inherit a width from. `.wrap` is 64rem, so keeping it would be a
+ * second element deciding the same width — and the one that eventually
+ * disagrees is the one nobody edits.
+ */
+.marketing .site-footer p {
+  margin: 0 0 0.5rem;
+}
+
+/* ── C-8 Form field anatomy ────────────────────────────────────────────── */
+
+.marketing .audit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 38em;
+}
+
+/*
+ * The form's direct child fieldset is the DISABLING wrapper, not a group: it
+ * exists so a submitting form goes inert in one attribute (C-9), and it must
+ * therefore be invisible. Selected structurally rather than by class because
+ * the markup is 09-01's and the class it does not have is not worth an edit.
+ */
+.marketing .audit-form > fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.marketing .audit-form label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.marketing .audit-form .hint {
+  font-size: 0.9375rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+/*
+ * `--line` on Paper is ~1.3:1, under the 3:1 WCAG 1.4.11 minimum for a control
+ * boundary. Console inputs keep it (operator-only, grandfathered); a stranger's
+ * form does not. `--muted` measures 5.7:1.
+ *
+ * `font-size: 1rem` is a floor, not a preference: iOS Safari zooms the viewport
+ * when a focused control is under 16px, and a page that zooms on the first tap
+ * is a page that scrolls sideways for the rest of the visit.
+ */
+.marketing .audit-form input,
+.marketing .audit-form select {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.marketing .audit-form .check input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+}
+
+.marketing .audit-form input[aria-invalid='true'],
+.marketing .audit-form select[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.marketing .audit-form .field-error {
+  color: var(--error);
+  font-size: 0.9375rem;
+  margin: 0.25rem 0 0;
+}
+
+/* The nested one IS a group: the ServiceM8 radios, with a legend (D-19). */
+.marketing .audit-form fieldset fieldset {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0;
+}
+
+.marketing .audit-form legend {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+/* A radio row is a tap target like any other (D-19). */
+.marketing .audit-form .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-weight: 400;
+}
+
+.marketing .audit-form .consent {
+  font-size: 0.9375rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/*
+ * The off-screen decoy (D-12). Off-screen rather than `display: none` on
+ * purpose: a bot that skips hidden inputs skips this one, and one that fills
+ * everything is caught. Moved here from an inline style now that this file
+ * exists — a decoy that is only hidden once a stylesheet lands is a text box in
+ * the middle of the form on the day it ships, which is why it started inline.
+ */
+.marketing .hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ── Guide pages ───────────────────────────────────────────────────────── */
+
+/*
+ * A LONG-FORM READING PAGE, which is the one thing the rest of this site is
+ * not. The request asked for a comfortable measure and generous line height and
+ * said they matter more here than anywhere else, because this page asks for two
+ * thousand words of a stranger's attention before it asks for anything else.
+ *
+ * `38em` is the SAME cap as `.measure`, `.callout` and `ul.tiers`, spelled the
+ * same way, so the guide's left and right edges are the site's. It is restated
+ * rather than left to `.measure` alone so the class is honest on its own: this
+ * is the reading column, and 1.65 is the line height that makes it one.
+ */
+.marketing .guide {
+  max-width: 38em;
+  line-height: 1.65;
+}
+
+/* Air above a new heading, on a page with ten of them. */
+.marketing .guide h2 {
+  margin: 2.5rem 0 1rem;
+}
+
+.marketing .guide ul,
+.marketing .guide ol {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 8px;
+}
+
+/*
+ * THE SCHEDULE TABLE SCROLLS, THE PAGE DOES NOT. Four columns of short cells
+ * fit a 390px phone only if the table may overflow inside its own box; a guide
+ * whose body scrolls sideways is a guide nobody finishes.
+ */
+.marketing .table-scroll {
+  overflow-x: auto;
+  margin: 0 0 1rem;
+}
+
+.marketing .guide table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.marketing .guide th,
+.marketing .guide td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.marketing .guide th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/*
+ * A MESSAGE TEMPLATE IS SOMETHING A READER COPIES, not something they read
+ * past. The same surface-and-line treatment as `.callout` and `li.tier` (no new
+ * token, no new colour, both schemes by construction), and `user-select: all`
+ * so one tap or click takes the WHOLE message rather than the word under the
+ * cursor. `white-space: pre-wrap` keeps the blank line between paragraphs and
+ * still wraps on a phone; `font: inherit` keeps it in the page's own face,
+ * because this is a message a tradesperson sends, not code.
+ */
+.marketing .template {
+  margin: 0 0 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.marketing .template figcaption {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.marketing .template pre {
+  font: inherit;
+  white-space: pre-wrap;
+  margin: 0;
+  -webkit-user-select: all;
+  user-select: all;
+}
+
+/*
+ * The small print the build request made non-optional (§6): who we are not
+ * affiliated with, and the date the steps were accurate. Muted and small, under
+ * the one button, in both schemes.
+ */
+.marketing .disclaimer {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 2rem 0 0;
+}
+
+/* ── Wide (>= 48rem) ───────────────────────────────────────────────────── */
+
+@media (min-width: 48rem) {
+  .marketing h1 {
+    font-size: 2.5rem;
+  }
+
+  .marketing section {
+    padding: 64px 0;
+  }
+
+  .marketing .hero {
+    padding-top: 64px;
+  }
+
+  /*
+   * No track list at this width either (17 Oct 2026, quick 261017-s1c): one
+   * plan, so the implicit single column fills the 38em cap set on the base
+   * rule and the card's edges are the `.callout`'s below it. `1fr 1fr` here
+   * would leave the one card at half the measure beside an empty track; a
+   * second plan would bring the two columns back with it.
+   */
+
+  .marketing li.tier,
+  .marketing .callout,
+  .marketing .template {
+    padding: 24px;
+  }
+}
+
+/* ── Phone (<= 37.5rem / 600px) ────────────────────────────────────────── */
+
+/*
+ * THE ONLY max-width BLOCK IN THE FILE, and it earns the exception (Cowork
+ * feedback, 15 Sep 2026). Everything above is mobile-first — a base every width
+ * gets, plus one `min-width` block that ADDS to it — which is the right shape
+ * for anything that is a stack on a phone and a row on a desktop. The header
+ * row is the other kind: it is correct above 600px and has to be taken apart
+ * below it, so the override belongs to the narrow end rather than being faked
+ * by weakening the rule everything else reads.
+ */
+@media (max-width: 37.5rem) {
+  /*
+   * ONE LINE EACH. At 390px the 147px lockup and the two links do not fit on a
+   * single line, so the nav wrapped INSIDE itself and left the lockup floating
+   * between one link above it and one below it. `flex-basis: 100%` on the nav
+   * makes the wrap happen in the one place it reads: the lockup alone on line
+   * one, both links sharing line two, left-aligned under it.
+   *
+   * `justify-content: space-between` stays on the base rule — it is inert on a
+   * line holding one item, and it is still what lays out the desktop.
+   *
+   * The row gap is 4px rather than the 16px between the columns: each link
+   * already carries a 44px tap target (D-19) whose empty upper half IS the
+   * space above the text, and 16px on top of it pushed the bar past 120px.
+   */
+  .marketing .site-header .wrap {
+    flex-wrap: wrap;
+    gap: 4px 16px;
+  }
+
+  .marketing .site-header nav {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  /*
+   * THE SCHEDULE IS A LIST HERE, NOT A TABLE (Cowork, 15 Sep 2026).
+   *
+   * Four columns in 390px was a sideways scroll inside a 3px-tall affordance
+   * nobody saw, with the fourth header cut to "JOB OF THE MESS…" — a reader on
+   * a phone met a table that appeared to have three columns and a truncated
+   * word. Turning the parts to `display: block` unmakes the grid: each row
+   * becomes a card, each value a line inside it.
+   *
+   * ONE MARKUP, TWO SHAPES. There is no second table and no script — the labels
+   * are the page's own column headers, carried on each cell by the guide page
+   * and printed by the generated-content rule below, so the two shapes read the
+   * same words by construction.
+   */
+  .marketing .guide .table-scroll {
+    overflow: visible;
+  }
+
+  .marketing .guide table,
+  .marketing .guide tbody,
+  .marketing .guide tbody tr,
+  .marketing .guide tbody th,
+  .marketing .guide tbody td {
+    display: block;
+  }
+
+  /*
+   * The header row is CLIPPED, not removed: `display: none` would take the
+   * column names away from a screen reader too, and they are the only thing
+   * that says what each value is. The one-pixel clip is the pattern the console
+   * uses for the same reason.
+   */
+  .marketing .guide thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* One follow-up, one card — the same surface treatment as `.callout`. */
+  .marketing .guide tbody tr {
+    margin: 0 0 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  .marketing .guide tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  /* The number is the card's heading, so it is bigger and it owns the top. */
+  .marketing .guide tbody th {
+    padding: 0;
+    border-bottom: 0;
+    font-size: 1.125rem;
+  }
+
+  .marketing .guide tbody td {
+    padding: 10px 0 0;
+    border-bottom: 0;
+  }
+
+  .marketing .guide tbody td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}

@@ -1,0 +1,1145 @@
+/*
+ * Minimal console styling. The operator uses this on a phone between sales
+ * meetings, so: system fonts (no webfont round-trip), large tap targets, and a
+ * single column that needs no horizontal scrolling.
+ */
+
+/*
+ * THE M1 PALETTE (09-UI-SPEC "Token set", D-04). Verbatim — these hexes were
+ * chosen once, with contrast measured in both schemes, and every `var(--…)`
+ * already shipped picks the new value up unchanged.
+ *
+ * Paper, Graphite, Slate, and Recovered green. GREEN IS RATIONED: dollar
+ * figures and the one primary action per page. Never chrome, never a border,
+ * never a badge — an accent spent everywhere is an accent spent nowhere, and
+ * the figure on the audit sheet is the thing the eye is supposed to land on.
+ *
+ * Known and accepted: `--accent` and `--ok` are now near-identical greens, so
+ * a console link and a healthy badge read the same colour.
+ * M1 leaves ok/warn/error alone on purpose; do NOT tint either to separate them.
+ */
+:root {
+  --bg: #FAFAF7; /* Paper */
+  --surface: #FFFFFF;
+  /* Graphite (logo v2, 19 Sep 2026). The brand's stated palette is Graphite and
+     Paper, and the header lockup is drawn in this exact hex — leaving the body
+     text on the old navy put two different darks on one page, which reads as a
+     printing fault rather than as a choice. Strictly better on contrast, so
+     nothing below had to move: 15.75:1 on Paper against the old 15.28:1, and
+     16.47:1 on --surface against 15.97:1. Dark scheme untouched — its
+     foreground was never this token's twin. */
+  --fg: #1A1F2B;
+  --muted: #5B6470; /* Slate */
+  --line: #D9DDE3;
+  --accent: #1B7A4A; /* Recovered green */
+  /* What a label sitting ON the accent is painted in. A literal here is the
+     bug: white survives every change made to the accent beneath it. */
+  --accent-fg: #FFFFFF;
+  --error: #B42318;
+  /* Sync-health badges only (02-UI-SPEC Color). Never for chrome or links. */
+  --ok: #1A7F37;
+  --warn: #9A6700;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101317;
+    --surface: #181C22;
+    --fg: #E9ECF1;
+    --muted: #9AA2B1;
+    --line: #262B33;
+    --accent: #4CBF86;
+    /* The dark scheme's own background on the dark accent is 8.1:1; white on it
+       is ~2.1:1 and would fail on the phone this is mostly read on. (It was
+       described as "Ink" here, which it never was — Ink was the light scheme's
+       foreground, and since 19 Sep that is Graphite.) */
+    --accent-fg: #101317;
+    --error: #FF8A80;
+    /* Both modes are mandatory: a token declared only in `:root` renders as the
+       light value against a dark background, which is where contrast failures
+       hide — the operator reads this on a phone that is usually in dark mode. */
+    --ok: #57AB5A;
+    --warn: #D4A72C;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  padding: 1.25rem;
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 1rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--error);
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  margin: 0 0 1rem;
+}
+
+/* Inline, next to the control that caused it — a boxed banner at the top of a
+   form is invisible once a phone keyboard is open. */
+.field-error {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0;
+}
+
+.hint {
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+input[aria-invalid='true'],
+select[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+/* --- shell --- */
+
+/* EVERY BRAND WIDTH IN THIS COMMENT WAS RE-MEASURED ON 19 Sep 2026, and three
+   of them were wrong. The numbers below were computed when the service was
+   still carrying its pre-rebrand name (121px at weight 600, and the name
+   itself cannot be written here — tests/brand.test.ts greps `src/` for it);
+   the rename to "Backdesk" cut
+   that to 73.6px and nobody updated the arithmetic, so the comment has been
+   quietly describing a bar that has not existed for weeks — and it is the first
+   thing read by anyone sizing something in here. The brand is now the 105px v2
+   lockup (see `.nav .brand img`), and every figure is what headless Chrome
+   reports over this file today.
+
+   THE OUTER BAR STILL WRAPS; THE INNER ROW NOW SCROLLS, AND THOSE ARE TWO
+   DIFFERENT JOBS. A nowrap flex row cannot shrink below the sum of its items'
+   min-content widths plus its gaps: the link row measures 502px with the Queue
+   badge showing, against the ~342px content box of a 390px phone. The surplus
+   used to land past the right edge on `Email`
+   and `Sign out`, widening the whole document (G-07-3 — measured scrollWidth
+   502). 07-06 spent that surplus on HEIGHT: it wrapped BOTH containers, which
+   stopped the document widening at the price of three rows — 176px at 390px,
+   about a quarter of the phone screen the operator opens most, with the two
+   least-used items on the rows nobody looks at.
+
+   Since quick-260904-dwt the surplus is spent SIDEWAYS. `.nav nav` is an
+   `overflow-x: auto` scroll container — the ONE box in the bar allowed to hold
+   overflow — so the row keeps all 502px of its content inside a 237px box and
+   the document stays exactly 390px. This is not the `overflow-x: hidden` on the
+   SHELL that the G-07-3 debug record rejected: a scroll container keeps every
+   item reachable by swipe, by programmatic scroll and by keyboard focus, where
+   a clipped shell made `Sign out` permanently unreachable.
+
+   `.nav` keeps `flex-wrap: wrap` as the FALLBACK, not as the layout. With
+   `flex: 1 1 12rem` the row's hypothetical size is 192px, so it stays on the
+   brand's line whenever at least that much is left (105px brand + 16px gap +
+   192px + 40px padding = ~353px) and drops UNDER the brand below that — at
+   320px, two lines and a 124px bar — instead of colliding with it.
+
+   Measured in headless Chrome over this file: 390px -> one 72px row (176px
+   before quick-260904-dwt), row box 237px against 502px of content, Inbox /
+   Queue / Audits fully visible, Reports cut at the right edge, `Sign out` fully
+   in view at scrollLeft 265 after one swipe; 360px -> one 72px row; 604px ->
+   72px, row box 451px; 700px -> 72px, nothing scrolls, `Sign out` flush at the
+   684px content edge.
+
+   FOUR ITEMS CANNOT FIT THE FIRST 390px SCREENFUL, and nothing here pretends
+   otherwise. The brand is 105px; with the 1rem gap and the 1.25rem side padding
+   the row gets 237px, and Inbox + Queue(badge) + Audits + Reports need 262px.
+   The one-row bar is the operator's actual complaint, so it wins, and Reports
+   being cut IS the cue that the row scrolls. Shrinking the brand or the gaps to
+   buy that fourth item is the trade this comment exists to refuse — and the
+   brand is now supplied artwork with a 100px floor, so it cannot be shrunk at
+   all.
+
+   THE 0.25rem PADDING / -0.25rem MARGIN PAIR IS NOT THE BLEED WR-03 BANNED.
+   That bleed BOUGHT tap-box height with a fixed margin fighting a variable gap,
+   and it put 0.7px of `Sign out` inside `Audits`. This pair buys nothing for any
+   hit box: the row itself is not tappable, the margin gives back exactly the
+   padding, and every item sits where it did. It exists only so a focus ring
+   (2px outline + 1px offset = 3px) is not clipped by the scroll container, which
+   clips anything painted outside its padding box, and `scroll-padding-inline`
+   stops the snap swallowing that padding back (without it the row snapped to
+   scrollLeft 4 on load and the first item's ring headroom was 0). `nav-check.sh`
+   asserts ring headroom >= 3px AND, as before, that no two hit boxes intersect.
+
+   THE FADE IS CSS ONLY, AND ABSENT WHENEVER THE ROW DOES NOT SCROLL.
+   `--nav-fade` is a registered <length> driven by `animation-timeline:
+   scroll(self inline)`: 2.5rem while scroll range remains, collapsing to 0 over
+   the last 15% so the final item is never dimmed at the end. Where the timeline
+   is inactive — nothing overflows, i.e. the 700px bar — the animation never
+   applies and the mask is fully opaque. Where scroll timelines are unsupported,
+   `animation-duration: auto` is 0s against a time timeline and `fill-mode: both`
+   holds the 100% keyframe (0px); an engine that ignores `@property` leaves
+   `var(--nav-fade)` invalid at computed-value time, which makes `mask-image`
+   `none`. Every path degrades to "no fade, still scrollable". No JS, and no
+   `prefers-reduced-motion` clause, because nothing moves on its own — the fade
+   only tracks the finger. `-webkit-overflow-scrolling: touch` is inert on
+   iOS >= 13 and is kept because the spec asks for it. */
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+@property --nav-fade {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+.nav nav {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 1rem;
+  flex: 1 1 12rem;
+  /* Implied by `overflow-x: auto` (a scroll container's automatic minimum size
+     is 0) and written anyway, so removing the overflow cannot silently
+     reintroduce G-07-3. */
+  min-width: 0;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 0.25rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.25rem;
+  margin: -0.25rem;
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--nav-fade)), transparent);
+  /* The shorthand FIRST: it resets `animation-timeline`, so the reverse order
+     would leave the fade on a time timeline. */
+  animation: nav-row-edge linear both;
+  animation-timeline: scroll(self inline);
+}
+
+/* The keyframes animate the registered length, not `mask-image` itself, so the
+   collapse over the last 15% interpolates instead of flipping. */
+@keyframes nav-row-edge {
+  0%,
+  85% {
+    --nav-fade: 2.5rem;
+  }
+  100% {
+    --nav-fade: 0px;
+  }
+}
+
+/* Older WebKit/Blink; `scrollbar-width: none` covers current engines. */
+.nav nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* `> *` and not `> a`: the last item is the <form> around Sign out. */
+.nav nav > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+/* The desktop right-alignment, and the reason the row is NOT
+   `justify-content: flex-end`: an auto margin absorbs free space when there is
+   some (700px — items flush at the 680px content edge, exactly as before) and
+   collapses to 0 under overflow (390px — the row starts at its own left edge and
+   scrolls from there). `flex-end` instead pushes the START of an overflowing row
+   out of reach. */
+.nav nav > :first-child {
+  margin-inline-start: auto;
+}
+
+/* The file's `:focus-visible` convention (see `.table-scroll:focus-visible`),
+   with a 1px offset so the ring's total extent is a known 3px — the number the
+   row's 0.25rem padding is sized against. The UA `auto` ring has no fixed extent
+   to size for, and a scroll container clips whatever is painted outside its
+   padding box. */
+/* `.nav .brand` joined this list when it became an image (19 Sep 2026). It sat
+   on the UA's `auto` ring before, which was tolerable around text and is not
+   around a transparent PNG: the ring would be the only thing saying where the
+   focused element is, drawn in a colour and a width this file does not choose,
+   against a lockup whose own ink stops well inside its box. */
+.nav .brand:focus-visible,
+.nav nav > a:focus-visible,
+.nav button.linkish:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* The `font-weight` and `color` are NOT dead now that the brand is an image.
+   They style the ALT TEXT — the one thing rendered if the PNG 404s or a
+   data-saving proxy strips it — and without `color` that fallback would arrive
+   as a blue underlined "Backdesk" in the middle of the bar. */
+.brand {
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--fg);
+}
+
+/*
+ * THE LOCKUP, AND WHY IT IS 105px RATHER THAN THE MARKETING HEADER'S 147px.
+ *
+ * logo/README.txt sets the floor at 100px; the bar sets the ceiling. 147px
+ * would have cost the scrolling row 73px against the text brand it replaced;
+ * 105px costs 31px, which is the whole of the trade and is measured below.
+ *
+ * 105 / 20 is 5.25 against the source's 5.236 (1508/288) — the identical
+ * rounding `.marketing .site-header img` already makes at 147/28, and 0.26%
+ * over a 20px height is a quarter of a pixel. The same pair is on the <img>
+ * element itself so nothing shifts while the PNG decodes.
+ *
+ * MEASURED AT 390px, BEFORE AND AFTER (headless Chrome over this file, the
+ * 07-06 nav probe with the brand swapped):
+ *
+ *            brand   row box   content   visible at rest        cut   max scroll
+ *   text     73.6px    268px     502px   Inbox Queue Audits   Reports    234px
+ *   lockup    105px    237px     502px   Inbox Queue Audits   Reports    265px
+ *
+ * The row is 31px shorter and NOTHING ELSE MOVED: the same three items are
+ * whole, Reports is still the item cut at the right edge — which is the
+ * documented scroll cue, not an accident — the document is still exactly 390px,
+ * the bar is still one 72px row, every hit box is still 44px, no two intersect,
+ * and the focus ring still has 4px of headroom inside the scroll container.
+ *
+ * NO MARK-ONLY FALLBACK, and the cost of that decision is written here rather
+ * than discovered. The bar drops to the two-line wrap fallback below ~353px
+ * (105 + 16 gap + 192 row basis + 40 padding), where the text brand held one
+ * line down to ~322px — so a 320px phone gets a 124px bar instead of a 72px
+ * one. 390px, 360px, 604px and 700px are all unchanged. That band is one
+ * discontinued screen size, the wrap is the fallback this file already
+ * describes and reserves for exactly this, the document never widens and every
+ * control stays reachable. Swapping in `mark-graphite.svg` under a breakpoint
+ * would buy those thirty-odd pixels with a second identity, a second asset on
+ * the fetch path and an <img> whose intrinsic size changes at a media query.
+ * If a 320px device ever matters, that is the change — and this is the number.
+ */
+.nav .brand img {
+  display: block;
+  width: 105px;
+  height: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* --- forms --- */
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 30rem;
+}
+
+label {
+  font-weight: 500;
+  margin-top: 0.6rem;
+}
+
+/* `textarea` belongs in this rule, not beside it. Left out, it renders at the
+   browser default — 13px monospace, no padding, no border colour of ours — and
+   iOS Safari zooms the viewport on focus because the font is under 16px. Every
+   multi-line field in the console is on a surface an operator uses one-handed
+   on a phone: the voice profile, the templates, and the draft edit box. */
+input,
+select,
+textarea {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  /* 16px minimum stops iOS Safari zooming on focus. */
+  font-size: 1rem;
+}
+
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin: 0.85rem 0 0;
+  padding: 0.75rem;
+}
+
+legend {
+  font-weight: 500;
+  padding: 0 0.35rem;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0 0.75rem 0 0;
+  font-weight: 400;
+}
+
+button {
+  font: inherit;
+  margin-top: 1rem;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  cursor: pointer;
+  /* Comfortable thumb target. */
+  min-height: 2.75rem;
+}
+
+button.linkish {
+  background: none;
+  color: var(--accent);
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  text-decoration: underline;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.55rem 0.9rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  text-decoration: none;
+}
+
+/* The form is a flex ITEM of `.nav nav`, so `display: inline` was already
+   being blockified; saying `flex` instead lets it size to the button it wraps
+   rather than to a line box, which is what makes the 44px below free of any
+   negative margin. `flex-direction: row` is not redundant — the generic `form`
+   rule above is a column, and inheriting that would centre the button on the
+   cross axis horizontally. */
+.nav form {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+}
+
+/*
+ * ── EVERY TAPPABLE THING IN THE BAR IS 44px, AND NOTHING BLEEDS ─────────────
+ *
+ * 06-UI-SPEC:51 is explicit: 44px minimum on every button, the skip confirm,
+ * the disclosure summaries, AND the nav Queue link's tap area — "nothing
+ * tappable may be smaller". Measured at 390px before this rule, only Sign out
+ * complied: the brand and all six links were 24px, and Queue — the one control
+ * the spec names — was 26.6px (07-06 review, WR-02).
+ *
+ * THE HEIGHT COMES FROM THE BOX THAT OWNS THE LINE, NOT FROM A BLEED.
+ * The previous rule bought Sign out's 44px with `margin: -0.625rem 0`, argued
+ * as free because the bar's height did not change. It was not free: it bled
+ * 10px above a line box with only ~9.3px of gap (0.5rem row-gap plus leading)
+ * to absorb it, so 0.7px of the button landed inside `Audits` across a 45.7px
+ * band — and the button, later in DOM order, won hit-testing there. A tap on
+ * the bottom edge of `Audits` signed the operator out (07-06 review, WR-03).
+ *
+ * The mechanism mattered more than the 0.7px. The bleed was a fixed 0.625rem
+ * fighting a gap made of `row-gap` plus whatever leading `line-height: 1.5`
+ * happened to produce, so any change to either moved one side and not the
+ * other — and it scaled the wrong way with user font settings, the overlap
+ * GROWING at a 20px root. Applying the same bleed to all eight targets would
+ * have made it a 10px overlap, not 0.7px.
+ *
+ * `inline-flex` + `min-height` takes the height honestly instead. The bar is
+ * taller for it — that is the actual price of the contract, and it is paid once
+ * here rather than hidden in a margin that only works by coincidence. Since
+ * quick-260904-dwt the bar is ONE 72px row at every width from ~353px up (the
+ * link row scrolls sideways instead of wrapping), not the 148px-at-390px it
+ * cost while both containers wrapped. `nav-check.sh` now asserts BOTH that
+ * every hit box clears 44px and that no two of them intersect.
+ */
+.nav .brand,
+.nav nav > a,
+.nav button.linkish {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  /* NO PADDING, IN EITHER AXIS. Vertical padding would grow the line box and
+     put us straight back into compensating for it somewhere else. Horizontal
+     padding is what the review suggested to widen the targets sideways, and it
+     is measurably not free: 0.125rem on each side of eight items is 32px, and
+     the desktop bar has ~660px of content box for ~660px of items. It wrapped
+     the 700px bar to two lines, which is the one thing `navLines` has always
+     asserted must not happen. The 44px contract is a vertical minimum; the
+     labels already own their width. */
+  padding: 0;
+  margin: 0;
+}
+
+/* --- table --- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+/* --- quotes table (D-16) --- */
+
+/* A 90-day backfill is hundreds of rows and seven columns, and the operator
+   reads it on a 390px phone. The table scrolls sideways INSIDE this box rather
+   than widening `main`, which would push the `Save eligibility` button off the
+   right edge of the page and out of reach (02-UI-SPEC overflow backstop). */
+.table-scroll {
+  overflow-x: auto;
+}
+
+/* THE BOX IS A TAB STOP, SO THE TAB STOP HAS TO BE VISIBLE (07-07 review, WR-03).
+   A scroll container holding nothing focusable is not reachable by keyboard in
+   Chrome, Edge or Safari, so every column this box pushes off-screen would be
+   pointer-only (WCAG 2.1.1) — the `Recent sync runs` table has no focusable
+   cell at all. Every wrapper therefore carries `tabIndex={0}`, `role="region"`
+   and a label, and this is what the operator sees when they land on one. First
+   `:focus-visible` rule in the file, so it sets the convention: the accent
+   colour, offset clear of the table's own top border. */
+.table-scroll:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Long job descriptions and addresses truncate to ONE line.
+   A wrapping cell turns a 200-row table into a wall of text where every row is
+   a different height, and the operator scanning for one job loses the column
+   alignment that made scanning possible (02-UI-SPEC long-text). */
+.cell-truncate {
+  display: block;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The `.filters` / `.filter-link` pair that lived here styled the D-16
+   Open/Won/Lost/All quote filter. D-18 superseded that control with the
+   pipeline grouping — `Closed` holds the won and lost history — and the rules
+   went with it rather than being left behind: dead CSS outlives the element it
+   styled and teaches the next reader that the control is still there somewhere.
+   The pipeline's own row styling is `.touch-line`, beside `.touch-meta`. */
+
+/* --- triage checklist (D-15) --- */
+
+/* Overrides the 30rem form default: this one is a list of quotes, not a column
+   of inputs, and a 30rem cap would truncate every description twice over. */
+.triage {
+  max-width: none;
+  margin-top: 1rem;
+}
+
+.triage-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.triage-list li {
+  border-bottom: 1px solid var(--line);
+}
+
+/* THE LABEL IS THE TAP TARGET. 44px of it, so the operator ticking twenty rows
+   on a phone is not aiming at a 16px box twenty times. */
+.triage-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0;
+  /* Undo the form-label defaults — these are rows, not field captions. */
+  margin-top: 0;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.triage-row input[type='checkbox'] {
+  /* Bigger than the browser default; the 44px belongs to the row, but the box
+     still has to be visible enough to read as ticked at arm's length. */
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+}
+
+.triage-text {
+  min-width: 0;
+}
+
+/* Full-width primary CTA on phone (02-UI-SPEC Screen 2). */
+.triage > button {
+  width: 100%;
+}
+
+/* --- detail --- */
+
+/* A pill must never be an inline box. An inline box fragments across line
+   boxes when its own text wraps, and the default `box-decoration-break: slice`
+   then draws the 999px border in halves with the text running out of both
+   ends. Blockifying the span makes the pill an atomic unit, and `nowrap` makes
+   it move to the next line whole rather than break; `max-width: 100%` keeps a
+   long label inside its container rather than overflowing it. */
+.badge {
+  align-self: center;
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 100%;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+/* Badge state modifiers (02-UI-SPEC "Badge state mapping").
+   Border and text only — the background stays --bg. A filled badge would need
+   its own foreground contrast pair per token in both schemes, and four filled
+   pills in a table row read as an alert when three of them are ordinary. */
+
+.badge--ok {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.badge--warn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+/* A pill that carries a FACT rather than a word (the go-live checklist's status
+   pills: a proof's date and artefact id, a template set's three variant names).
+   `nowrap` is right for a one-word state but wrong for a sentence: an
+   inline-block cannot shrink below its own min-content, so a 60-character pill
+   sets the page wider than the phone and the whole client page scrolls
+   sideways (Phase 15 UAT, 15 Oct 2026). Wrapping inside the pill keeps the
+   border whole (it is still one block) and keeps the page 375px. */
+.badge--wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.badge--error {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* --- auth-failed banner (D-05) --- */
+
+/* Distinct from `.error`, which is a form-level message. This is a persistent
+   page-level state: it is not dismissible, it does not appear next to a
+   control, and it clears only when the underlying condition does. */
+.banner-error {
+  color: var(--error);
+  border: 1px solid currentColor;
+  border-left-width: 3px;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 0 0 16px;
+}
+
+.banner-error h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.banner-error p {
+  margin: 0;
+}
+
+/* --- disclosure (Replace key) --- */
+
+.disclosure {
+  margin-top: 16px;
+}
+
+.disclosure > summary {
+  display: flex;
+  align-items: center;
+  /* 44px thumb target — the whole summary row, not just the text. */
+  min-height: 44px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+/* `.touch-list li` is a WRAPPING FLEX ROW, so a bare `<details>` dropped into
+   one becomes a content-sized item sitting beside the `generated …` meta.
+   Claiming the whole line (the `.touch-line` precedent below) puts the summary
+   under the row it belongs to and keeps its 44px target full-width. */
+.touch-list li > .disclosure {
+  flex: 1 1 100%;
+  margin-top: 0;
+}
+
+/* Stacked meta lines under a heading — 8px, not the 16px block default. */
+.meta {
+  margin: 0 0 8px;
+}
+
+.profile {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: 0.5rem 1rem;
+  margin: 1rem 0 0;
+}
+
+.profile dt {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.profile dd {
+  margin: 0;
+}
+
+/* --- figures and metrics (Phase 7) --- */
+
+/* RIGHT-ALIGNED TABULAR NUMERALS, for every column of money in this product.
+
+   The report's per-job table is read line by line by the person being billed:
+   with proportional digits `$2,450.00` and `$2,540.00` are different widths and
+   the eye cannot compare them without re-reading, and left-aligned money hides
+   the order of magnitude — `$980.00` and `$9,800.00` start in the same place.
+   Both problems are solved by the same two declarations, and they belong in
+   globals because the audit sheet, the report sheet and the fee schedule all
+   need them. */
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A `.profile`-shaped `dl` whose `dd` may carry a badge and its evidence text
+   beside the value (07-UI-SPEC Screens §2).
+
+   The `dd` is a FLEX ROW rather than an inline run because the three parts —
+   `7.1%`, an `above 5%` badge, `3 of 42 contacts messaged` — must sit on one
+   line where there is room and wrap UNDER the rate on a phone. `.badge` is
+   already written for a flex context (it relies on the parent's gap and on
+   `align-self` for centring), so this is the container contract it expects
+   rather than a new one. */
+.metrics {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: 0.5rem 1rem;
+  margin: 1rem 0 0;
+}
+
+.metrics dt {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.metrics dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+}
+
+/* --- quote detail (D-16) --- */
+
+/* The zone name beside the schedule heading, not inside every row. Repeating
+   "Australia/Perth" eleven times pushes the times themselves off a 390px
+   screen; stating it once above the list is what makes each time readable. */
+.zone-note {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+/* A business name typed by a stranger, inside a flex item (09-09).
+   The public form caps the name at 120 characters and normalises nothing, so
+   one unbreakable word is a legal submission — and an unbreakable word sets the
+   min-content width of its flex item, which `flex-shrink` cannot go below. The
+   surplus becomes document width on a 390px phone, exactly the way an unwrapped
+   table does (G-07-6). `anywhere` rather than `break-word` because the latter is
+   ignored while the item still has a wider min-content contribution. */
+.request-name {
+  overflow-wrap: anywhere;
+}
+
+/* A LIST, NOT A TABLE, and that is the phone decision on this screen.
+   The schedule has three facts per row and one of them is long; a table forces
+   horizontal scrolling inside `.table-scroll`, which on a phone means the
+   status badge — the fact the operator came for — is the one off-screen. */
+.touch-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.touch-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line);
+}
+
+/* A flex CONTAINER as well as a flex item. `.badge` is written for a flex
+   context — it relies on the parent's `gap` for separation and on `align-self`
+   for centring — and every usage but this one nests badges directly in
+   `.touch-list li`. Declaring the container here restores that contract for
+   children of `.touch-when` too, and the gap separates a bare timestamp text
+   node from the pills regardless of whether JSX kept the whitespace between
+   them (it strips whitespace containing newlines, so it usually did not). */
+.touch-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  flex: 1 1 12rem;
+}
+
+/* Inbox variant: the header owns its whole row on a phone. With the base
+   12rem basis it shares the li's first flex line with the content-sized
+   `.meta` phone number, leaving roughly 200px for a ~280px classification
+   pill — the squeeze that forces the wrap in the first place. Same phone/
+   desktop split `.touch-meta` already makes. */
+.touch-when--stack {
+  flex-basis: 100%;
+}
+
+.touch-meta {
+  flex: 1 1 100%;
+  font-size: 0.875rem;
+}
+
+/* A row that claims a WHOLE flex line inside `.touch-list li` (D-18/D-19/D-20).
+   A pipeline row carries more than the schedule's three facts, and two of them
+   — the next-touch line and the last-activity chips — are sentences rather than
+   pills. `.touch-meta` relaxes to `1 1 auto` above phone width so it can share a
+   line; these must not, or the next-touch line ends up wrapped around the job
+   number it belongs under. Unlike `.touch-meta` it stays full-width at every
+   size, which is the difference and the reason it is not a modifier of it. */
+.touch-line {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* A customer's reply inside the conversation thread (D-19).
+   Full width at every size — the body IS the meaning of the row, and
+   `.touch-meta` relaxes to `1 1 auto` above phone width, which would sit a
+   paragraph beside a timestamp. `pre-wrap` keeps the line breaks the customer
+   actually typed; `overflow-wrap: anywhere` is what stops a pasted URL widening
+   the whole page, the same pair `.draft-body` uses on the message being
+   approved. NOT truncated and not clamped at any width. */
+.reply-body {
+  flex: 1 1 100%;
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 32rem) {
+  /* Above phone width the middle column sits inline rather than wrapping. */
+  .touch-meta {
+    flex: 1 1 auto;
+  }
+
+  .touch-when--stack {
+    flex-basis: 12rem;
+  }
+}
+
+/* Below 360px even a full-row header is narrower than the longest label
+   ("reads as none of the above — a guess" ~ 320px rendered, plus main's
+   2 x 1.25rem side padding = 360px). There, wrapping INSIDE the pill is the
+   lesser evil: an inline-block cannot fragment, so the border stays intact
+   around the wrapped text instead of the text overflowing it. Scoped to the
+   inbox so short pills elsewhere keep their single-line shape. */
+@media (max-width: 22.5rem) {
+  .touch-when--stack .badge {
+    white-space: normal;
+  }
+}
+
+/* --- cadence controls (D-16) --- */
+
+/* Full-width stacked buttons with 44px targets. The kill switch is reached
+   one-handed on a phone by an operator who has just been told to stop, so
+   nothing here is a small inline control beside something else. */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.controls form {
+  margin: 0;
+  max-width: none;
+}
+
+.controls button {
+  width: 100%;
+  min-height: 2.75rem;
+}
+
+/* The ARMED kill button, and it is the only destructive-looking control in the
+   console. Outline rather than filled, matching the badge rule: a filled red
+   block would need its own contrast pair in both schemes, and the border plus
+   the changed label already say everything the colour does. */
+.controls .kill-armed {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.controls .kill-warning {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* --- the quiet control (06-03, the queue's skip) --- */
+
+/* A REAL ACTION THAT IS NOT THE ACTION. Skip is terminal for the touch it names,
+   but it is not what the operator came to do — approving is — and it is not
+   destructive in the kill switch's sense either.
+
+   So it spends neither token the console reserves: not `--accent`, which the
+   base `button` rule fills and which means "the thing to tap", and NOT
+   `--error`, because the armed kill on the quote page is deliberately the only
+   red control in this console (D-02). A second red control halves the meaning of
+   the first, and the first is the one that stops a whole cadence.
+
+   Both schemes come free: every value here is a custom property, and the two
+   `:root` blocks already carry the pair. A hard-coded hex in this rule would
+   render the light value against a dark background — the failure the token
+   comment at the top of this file names.
+
+   `border` in full rather than `border-color`: the base `button` rule sets
+   `border: 0`, so a colour alone would draw nothing.
+
+   `inline-flex` with centred content, padding and radius restated: this class
+   is worn by an `<a>` as well as a `<button>` (the no-draft card's "Open the
+   quote"), and an inline anchor has neither a min-height that means anything
+   nor a box to centre a label in. A link to somewhere else is a tappable target
+   in a thumb-worked column, so it gets the same 44px as everything beside it. */
+.button-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.7rem 1rem;
+  text-decoration: none;
+  /* Restated rather than inherited: this class is used inside `.controls` and
+     outside it, and the 44px thumb target is not optional in either place. */
+  min-height: 2.75rem;
+}
+
+/* `.controls button` is already full-width; an anchor is not a button. */
+.controls .button-quiet {
+  width: 100%;
+}
+
+/* THE PRIMARY ACTION IN A STACKED CONTROL COLUMN (09-UI-SPEC C-11).
+
+   `.button` is the accent-filled link used in a page header, where it sits on a
+   line beside a heading and its padding is the whole of its height — about 42px,
+   which is under the 44px thumb target D-19 requires and which `.controls
+   button` and `.button-quiet` both restate for themselves. Inside `.controls`
+   the same class is worn by a full-width stacked action ("Start audit"), so it
+   needs the box the other two already have. Scoped to `.controls` so the header
+   buttons on /clients and /audits are untouched. */
+.controls .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.75rem;
+}
+
+/*
+ * THE SECOND ACTION ON A PUBLIC PAGE (09-UI-SPEC C-2).
+ *
+ * `.button-quiet` above is the console's neutral control and draws its border
+ * in `--line`, which is deliberately faint beside a table. On a landing
+ * section the secondary action sits next to nothing and has to hold its own, so
+ * this one is outlined in `--fg`. Same box, same 44px, no accent: green is
+ * rationed to the ONE primary action per page (D-04).
+ *
+ * `inline-flex` with the padding and radius restated because this class is
+ * worn by an `<a>` as often as a `<button>`, and an inline anchor has neither
+ * a min-height that means anything nor a box to centre a label in.
+ */
+.button--secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  border-radius: 6px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  min-height: 2.75rem;
+}
+
+/*
+ * The page's one action, at thumb reach (09-UI-SPEC Spacing exceptions).
+ *
+ * 48px rather than the 44px minimum, and full width on a phone, because a
+ * landing hero has exactly one thing it wants pressed and a thumb should not
+ * have to aim. At `min-width: 48rem` there is room for the label to size the
+ * box, so it stops spanning the column and takes a floor instead — a 900px-wide
+ * button reads as a banner, not as a control.
+ */
+.button--lg {
+  min-height: 3rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.0625rem;
+  width: 100%;
+}
+
+@media (min-width: 48rem) {
+  .button--lg {
+    width: auto;
+    min-width: 12.5rem;
+  }
+}
+
+/* The header pair on a queue card is a `.touch-when` flex row nested inside
+   `.row`, whose `justify-content: space-between` would otherwise let a short
+   client name sit hard against the status badge. `1 1 12rem` from `.touch-when`
+   gives it the growth; this keeps the name and its urgency pill from being
+   pushed apart to opposite ends of their own row. */
+.row > .touch-when {
+  justify-content: flex-start;
+}
+
+/* The consequence sentence above the confirm pair. Muted, not red — the words
+   do the work, and the colour is the kill switch's. */
+.skip-confirm {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* --- draft review (D-12) --- */
+
+/* The approval gate. One card per touch awaiting a human, above the schedule,
+   because it is the only thing on the quote page that is WAITING rather than
+   reporting. */
+.draft-review {
+  margin: 1rem 0 0;
+}
+
+.draft-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin: 0.75rem 0 0;
+}
+
+/* THE BYTES, AS THEY WILL SEND. Monospace is not decoration here: the whole
+   reason the fact validator exists is that `$2,450` and `$2,540` look alike at
+   a glance, and a proportional font makes them look more alike. `pre-wrap`
+   keeps the model's own line breaks while still wrapping on a 390px screen —
+   a horizontal scrollbar over the message being approved would hide the end of
+   it, which on an SMS is the opt-out line. */
+.draft-body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0.5rem 0;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+/* The edit box inherits the same face, so what the operator types looks exactly
+   like what they are replacing. */
+textarea.draft-body {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.draft-violations {
+  margin: 0.5rem 0;
+}
+
+.draft-violations .touch-list li {
+  padding: 0.4rem 0;
+}
+
+/* --- login --- */
+
+.auth {
+  max-width: 22rem;
+  margin: 12vh auto 0;
+}
+
+/* The client's Backdesk divert number (CAP-01) — the one thing the operator
+   reads out to the tradie, so it is the largest text in its section, with
+   tabular digits so a misheard 5/6 is easy to re-read. */
+.divert-number {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin: 0.25rem 0 0.5rem;
+}

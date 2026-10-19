@@ -1,0 +1,23 @@
+# What Vercel must NOT upload for a build.
+#
+# Added 2026-09-09 (plan 09-08) after `vercel --prod` began failing with
+# "Upload aborted": committing six Lighthouse reports put ~3 MB of JSON in the
+# upload set and the deploy stopped completing. None of it is read by
+# `next build` or by anything at runtime.
+#
+# The size was the symptom. The real point is that planning artifacts, evidence
+# documents and brand source files have no business on a build machine — this
+# repository keeps its working notes next to its code, and without this file
+# every one of them was being shipped to the edge on every deploy.
+#
+# Keep this list to things that are provably build-irrelevant. `public/` holds
+# the served assets (favicon, OG image) and is deliberately absent below.
+
+.planning/
+docs/
+logo/
+
+# Local-only test and tooling output.
+coverage/
+test-results/
+playwright-report/

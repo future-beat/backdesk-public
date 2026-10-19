@@ -1,0 +1,27 @@
+-- Migration 0021 — `created_by_event_id`, the replay-dedupe key (G-3-2).
+--
+-- HAND-EDITED FROM THE DRIZZLE-KIT OUTPUT, and the edit is the point.
+-- drizzle-kit emits bare `ADD COLUMN` / `CREATE UNIQUE INDEX`, which raise
+-- (42701 / 42P07) on a second run. Every migration from 0004 on is IDEMPOTENT BY
+-- CONSTRUCTION — the house rule migration 0022 states verbatim one file later —
+-- because the migrator applies the journal IN ORDER: a single non-replayable
+-- file blocks every migration behind it, forever, on any database that ever sees
+-- it twice.
+--
+-- SAFE TO EDIT AFTER APPLICATION. `drizzle-orm`'s migrator selects the last
+-- applied row by `created_at` and applies every journal entry whose `when`
+-- exceeds it (see pg-core/dialect.js: `Number(lastDbMigration.created_at) <
+-- migration.folderMillis`). It records the file hash but never compares it, so
+-- changing the body of an already-applied migration needs no reconciliation
+-- step; it changes only what a FRESH database replays.
+--
+-- Note for when this table stops being small: `CREATE UNIQUE INDEX` without
+-- `CONCURRENTLY` holds ACCESS EXCLUSIVE on `cadences` for the duration of the
+-- build, and the per-minute cron writes to this table. Harmless at MVP row
+-- counts, not harmless later.
+--
+-- The index this file creates is NARROWED to `WHERE created_by_event_id IS NOT
+-- NULL` by migration 0023, which also adds the CHECK that makes the key
+-- mandatory for new rows. This file is left as the history of what was applied.
+ALTER TABLE "cadences" ADD COLUMN IF NOT EXISTS "created_by_event_id" bigint;--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "cadences_one_per_opened_event" ON "cadences" USING btree ("created_by_event_id");

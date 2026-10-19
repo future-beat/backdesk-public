@@ -1,0 +1,40 @@
+-- ── RECORD THE MERGE INPUTS ON THE ROW, RATHER THAN RE-DERIVING THEM ────────
+--
+-- `touch_drafts` already carries `prompt_version`, `template_version` and
+-- `model` for exactly one reason: "what produced this text" must be readable off
+-- the row rather than reconstructed from whatever the code and the config happen
+-- to say later. Two inputs were missing from that set, and the approval-time
+-- re-validation was re-deriving both — each from a source that can have moved.
+--
+-- ── (1) merge_now: THE INSTANT THE WHITELIST WAS BUILT FROM ─────────────────
+--
+-- `editAndApproveDraft` rebuilt the whitelist at `touch_drafts.created_at`,
+-- which is Postgres `now()` written when the row lands. The whitelist the model
+-- was actually given was built from `runCadenceTick`'s JS `now`, captured at the
+-- top of the tick — before the consume pass, the per-tenant progress passes and
+-- up to two model calls. `renderDaysSince` FLOORS the difference into whole
+-- days, so once per day per cadence (at the anchor time-of-day) there is a
+-- window of `tick duration + clock skew` in which the two instants land on
+-- opposite sides of a day boundary. The body then says `14`, the rebuilt
+-- whitelist says `15`, and the validator refuses `unlisted_number` for a figure
+-- the model was legitimately handed — with nothing on screen explaining it and
+-- no edit that fixes it.
+--
+-- ── (2) compliance_suffix: THE SPAM ACT LINE THIS DRAFT WAS WRITTEN WITH ────
+--
+-- `complianceSuffix(tenants.name)` reads a MUTABLE column (`MUTABLE_KEYS`).
+-- After a rename the textarea is pre-filled with the draft's `final_body`,
+-- carrying the OLD suffix, while `expectedSuffix` re-derives the NEW one — so
+-- submitting the pre-filled text unmodified fails `missing_suffix`. Meanwhile
+-- `approveDraft` re-writes the stored old-suffix bytes unchanged, so the two
+-- approve paths disagree about what the compliance line is. Freezing it here is
+-- the same argument `final_body` already makes, applied to the half of
+-- `final_body` that is ours rather than the model's.
+--
+-- BOTH NULLABLE. Rows written before this migration have neither, and the
+-- approve action falls back to `created_at` and to re-deriving the suffix —
+-- which is exactly the behaviour those rows already had. A backfill would be
+-- inventing values for an evidence table.
+
+ALTER TABLE "touch_drafts" ADD COLUMN "merge_now" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "touch_drafts" ADD COLUMN "compliance_suffix" text;

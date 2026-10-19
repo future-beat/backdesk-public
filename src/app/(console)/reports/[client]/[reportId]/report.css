@@ -1,0 +1,578 @@
+/*
+ * The monthly report sheet (D-11/D-12/D-13, 07-UI-SPEC Screen 3).
+ *
+ * ── WHY THIS IS NOT IN globals.css ──────────────────────────────────────────
+ *
+ * The `audit.css` argument, verbatim: every rule here is scoped to one page and
+ * half of it is `@media print`. Put in globals.css it would be parsed on the
+ * login screen and every console route, and the `@page` rule would apply to
+ * printing ANY page in the product.
+ *
+ * ── THE ARTIFACT THIS FILE EXISTS TO PRODUCE ────────────────────────────────
+ *
+ * An A4 document the operator prints to PDF from the browser and attaches to an
+ * invoice by hand. NO PDF LIBRARY, NO SYSTEM EMAIL, NO CLIENT LINK (D-12) — the
+ * browser is the PDF engine, which is why the print block below is the delivery
+ * mechanism and not a nicety.
+ *
+ * Unlike the audit, this document is ALLOWED a second page: a month with twenty
+ * recovered jobs is a good month, and squeezing it onto one sheet would mean
+ * dropping lines. What must not happen is a row split across the fold — and no
+ * engine promises to keep a row TALLER THAN ONE LINE whole, whatever the
+ * `break-inside` list says. So every cell of the per-job table is driven to one
+ * line box in print: a one-line row cannot straddle a fold. Repeating the column
+ * header on continuation pages is a Chromium behaviour this file makes explicit
+ * and that WebKit does not offer at all — recorded engine debt, not a rule this
+ * file is missing (07-06).
+ *
+ * NO HEX OUTSIDE THE PRINT BLOCK. Every screen rule below is expressed in the
+ * existing tokens, in both schemes, with no new token added this phase.
+ */
+
+.report-sheet {
+  /* 42rem: the audit's measure. The figure grid and the footnote paragraphs
+     both read well at it, and it is what makes the printed and the on-screen
+     line lengths recognisably the same document. */
+  max-width: 42rem;
+  margin: 0 auto;
+  padding-top: 3rem; /* 2xl */
+}
+
+/*
+ * ── THE LETTERHEAD (logo v2, 19 Sep 2026) ───────────────────────────────────
+ *
+ * This is the sheet stapled to an invoice. Until now the only thing on it that
+ * said who produced it was the ABN line at the foot; the lockup now sits at the
+ * top of the document, above the title, where a letterhead goes.
+ *
+ * TWO <img> ELEMENTS TOGGLED BY `display`, AND NOT THE `<picture>` THE NAV AND
+ * THE MARKETING HEADER USE — `audit.css`'s argument, verbatim, because it is
+ * the same document problem. In short: the supplied lockups are transparent, a
+ * printed page is always a light ground, and a browser printing from a
+ * dark-mode phone STILL REPORTS DARK (which is why the block below re-declares
+ * the tokens at all). Printed through Chrome's `Page.printToPDF` with the
+ * scheme forced dark, `<picture>` + `media="(prefers-color-scheme: dark)"`
+ * selects the PAPER lockup and puts a white wordmark on white paper — on the
+ * page a paying client reads. `display` inside `@media print` cannot be got
+ * wrong by an engine; source re-selection during a print layout is a promise
+ * WebKit does not make, and this page is opened on an iPhone.
+ *
+ * Cost: one extra ~34 KB PNG on an auth-gated, operator-only page that is on no
+ * performance budget. It buys a guarantee about the artifact.
+ */
+.report-lockup {
+  margin: 0 0 1.5rem; /* lg */
+}
+
+/*
+ * THIS RULE SETS SIZE AND NOT `display`, AND THAT IS A BUG FIX, NOT A STYLE.
+ *
+ * It said `display: block` first. `.report-lockup img` is specificity (0,1,1)
+ * and the two modifiers below are (0,1,0), so the descendant selector beat both
+ * of them and BOTH drawings rendered — in every scheme and on paper. The
+ * printed report carried the Graphite lockup with the Paper one ghosting
+ * underneath it, and the test asserting `.report-lockup-dark { display: none }`
+ * passed the whole time, because the rule was there; it just never won. Caught
+ * by printing the sheet and looking at it.
+ *
+ * So `display` is owned by the two modifiers alone, at equal specificity, and
+ * source order decides. Do not reintroduce a `display` here.
+ */
+.report-lockup img {
+  /* The marketing header's pair exactly (147 / 5.236 = 28). */
+  width: 147px;
+  height: 28px;
+}
+
+/* Light is the default and dark is the exception, so a browser that never
+   evaluates the query still gets the readable one. Both are `block` rather
+   than the UA's `inline` so the image sits on its own line as a letterhead. */
+.report-lockup-light {
+  display: block;
+}
+
+.report-lockup-dark {
+  display: none;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  .report-lockup-light {
+    display: none;
+  }
+
+  .report-lockup-dark {
+    display: block;
+  }
+}
+
+.report-sheet h1 {
+  margin-bottom: 0.25rem; /* xs */
+}
+
+.report-subline {
+  margin-top: 0;
+  margin-bottom: 1.5rem; /* lg */
+}
+
+/* --- the hero: return on fees --- */
+
+.report-hero {
+  margin: 0 0 1.5rem; /* lg */
+}
+
+.report-hero dt,
+.report-figure dt {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.25rem; /* xs */
+}
+
+.report-hero dd {
+  margin: 0;
+  /* Display size, and the ONLY use of it on this page. The audit spent 32px on
+     four figures because it had no hero; this document has one number the
+     client is looking for, and everything else steps down to 24px so that
+     number is the thing the eye lands on. */
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* The qualification under the hero number: 14px prose, and it WRAPS. It is a
+   second `dd` on the same `dt`, so it inherits the display size above and has
+   to say otherwise. */
+.report-hero .report-hero-note {
+  margin: 0.25rem 0 0; /* xs */
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--muted);
+  white-space: normal;
+}
+
+/* --- the six secondary figures --- */
+
+/*
+ * Three across on A4 and on anything wider than a phone, one or two below it.
+ * `auto-fit` with a 10rem floor does that without a media query and without a
+ * breakpoint anyone has to remember: the cells reflow when they stop fitting,
+ * which is the actual condition.
+ */
+.report-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1.5rem; /* lg */
+  margin: 0 0 2rem; /* xl */
+}
+
+.report-figure dd {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  /* Lining, fixed-width digits (M1 §3): these figures stack in a grid and the
+     client reads them down a column, where a proportional 1 shifts the decimal. */
+  font-variant-numeric: tabular-nums;
+  /* A seven-digit dollar figure must not wrap mid-number on a 360px phone. */
+  white-space: nowrap;
+}
+
+/* The `of 11 won in the month` qualifier under a figure — 14px prose, and it
+   MAY wrap, unlike the number above it. */
+.report-figure .report-figure-note {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 400;
+  white-space: normal;
+}
+
+/* --- the per-job table --- */
+
+.report-lines {
+  margin-top: 1rem; /* md */
+}
+
+/*
+ * ── ON SCREEN THE DESCRIPTION IS NOT CLIPPED ────────────────────────────────
+ *
+ * `.cell-truncate` in globals.css caps at 16rem and clips to one line. That
+ * rule was written for the D-16 quotes table, where the argument is real: two
+ * hundred rows of varying height destroy the column alignment an operator
+ * scans by. It does not transfer here.
+ *
+ * This table is the recovered jobs of ONE month — a dozen rows, read rather
+ * than scanned — and it already sits in `.table-scroll`, a box whose entire
+ * purpose is to trade horizontal scroll for uncut columns. Capping inside it
+ * buys no layout at all: it is pure loss, ~53% of the cell at a 1200px
+ * viewport (07-06 review, WR-01).
+ *
+ * And the recovery affordance did not survive the medium. The fallback is
+ * `title` on a non-focusable `<span>` — unreachable by keyboard, inconsistently
+ * announced, and inert on touch. The operator reads this page "on a phone
+ * between sales meetings" (page.tsx), which is the one device where `title`
+ * is guaranteed to do nothing.
+ *
+ * So on screen the whole 60-code-point frozen description is readable, and the
+ * clip lives in `@media print` ONLY — where it is a measured budget and the
+ * cost is asserted (see `.report-lines .cell-truncate` in the print block).
+ */
+.report-lines .cell-truncate {
+  max-width: none;
+  white-space: normal;
+}
+
+/* Money columns: right-aligned tabular numerals, so `$2,450.00` and
+   `$2,540.00` align digit-for-digit down a column the client reads line by
+   line. The `.num` rule in globals.css owns the alignment; these two selectors
+   exist because `th`/`td` alignment is set by the browser's default sheet at a
+   higher specificity than a bare class. */
+.report-lines td.num,
+.report-lines th.num {
+  text-align: right;
+}
+
+.report-lines tfoot td {
+  font-weight: 600;
+}
+
+/* --- methodology footnotes --- */
+
+.report-notes {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted);
+  /* 20px: off the named scale, deliberately. The browser default (40px) wastes
+     a fifth of a phone column, and 1rem clips two-digit markers in Safari. */
+  padding-left: 1.25rem;
+  margin: 1.5rem 0 0; /* lg */
+}
+
+.report-notes li + li {
+  margin-top: 0.5rem; /* sm */
+}
+
+/* The shorthand, not the `margin-top` longhand — the `.report-hero` /
+   `.report-figures` / `.report-notes` convention in this file, and here it is
+   load-bearing. This is a `<p>`: it keeps the UA's `margin-block-end: 1em`
+   (13.84px) unless something resets it. In print nothing below it has bottom
+   padding or a border, so that margin collapses out through `.report-sheet`,
+   `main`, `.shell` and `body` to the root as 14px of zero-ink document height —
+   and WebKit pages for that height, giving one entirely blank final page
+   whenever the footer lands within 14px of a fold (the UAT PDF, G-07-1).
+   Chromium truncates the trailing height instead, which is why desktop never
+   showed it. */
+.report-footer {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem; /* md */
+  margin: 1.5rem 0 0; /* lg */
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* --- screen-only operator machinery --- */
+
+.report-actions {
+  margin-top: 2rem; /* xl */
+  padding-top: 1.5rem; /* lg */
+  border-top: 1px solid var(--line);
+}
+
+/* The button and its hint stack, `.controls`-style: the hint is a sentence and
+   must wrap under a full-width 44px button rather than beside it. */
+.report-actions button {
+  width: 100%;
+  min-height: 2.75rem;
+}
+
+/* THE PRINT ACKNOWLEDGEMENT, WHICH IS ALWAYS IN THE DOM AND USUALLY EMPTY.
+   `print-button.tsx` mounts its `role="status"` line from first paint and
+   changes only the text, because a live region inserted together with its
+   content is routinely announced as nothing (07-07 review, WR-01). The price
+   is an empty <p> on every idle report, and `.hint`'s 0.5rem bottom margin
+   would show as a gap under the button that exists for a sentence nobody has
+   triggered yet. Screen-only: the whole section is display:none in print. */
+.report-actions p[role='status']:empty {
+  margin: 0;
+  min-height: 0;
+}
+
+/*
+ * THE TWO MEDIUM SWITCHES.
+ *
+ * `.report-screen-note` is operator context that must not reach the client's
+ * copy — a `value unavailable` badge, a `month to date` pill, the note about a
+ * newer version. `.report-print-only` is its opposite: text the printed sheet
+ * needs BECAUSE the badge beside it is gone (the `to 14 Aug` suffix on a
+ * month-to-date period line).
+ *
+ * Two classes rather than one modifier, because they are opposite defaults and
+ * a single `.print-only` toggled by a media query reads as a bug in whichever
+ * medium you are looking at.
+ */
+.report-print-only {
+  display: none;
+}
+
+@media print {
+  /*
+   * ── FORCED LIGHT, UNCONDITIONALLY ─────────────────────────────────────────
+   *
+   * The operator's phone is usually in dark mode, and `prefers-color-scheme`
+   * still reports dark while printing. Without this the report prints as light
+   * grey text on a dark background — or, on printers that drop backgrounds,
+   * near-white text on white paper. Re-declaring the tokens rather than
+   * overriding each rule means every rule above inherits the print palette.
+   *
+   * `--fg` IS GRAPHITE, THE BRAND'S OWN DARK (logo v2, 19 Sep 2026). It was
+   * #16181d, which is neither Ink nor Graphite — a near-black somebody picked
+   * for print contrast before the palette had a dark of its own. #1A1F2B is the
+   * value in logo/README.txt and the one `globals.css` now paints the screen in,
+   * so the sheet the client holds and the screen it was read on are finally the
+   * same colour. The contrast cost is nil and it is COMPUTED, not asserted here:
+   * 16.47:1 on white against #16181d's 17.76:1, both an order of magnitude
+   * past the 4.5:1 floor. tests/brand-tokens.test.ts does the arithmetic. This is the
+   * document stapled to an invoice, so it is the one that most needed fixing.
+   */
+  :root {
+    --bg: #ffffff;
+    --fg: #1A1F2B;
+    --muted: #3d424e;
+    --line: #c9ced6;
+    /* Recovered green, not the pre-M1 blue: the printed figure is the one place
+       this document spends colour, and it must be the brand's (D-04, D-07). */
+    --accent: #1B7A4A;
+  }
+
+  html,
+  body {
+    background: #ffffff;
+    color: #1A1F2B;
+  }
+
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  /* Console chrome, every control, and every screen-only operator note. The
+     printed region contains nothing interactive (D-12). */
+  .nav,
+  .report-actions,
+  .report-backlink,
+  .banner-error,
+  .report-screen-note,
+  button,
+  form {
+    display: none !important;
+  }
+
+  /* The other half of the medium switch. */
+  .report-print-only {
+    display: inline;
+  }
+
+  main {
+    padding: 0;
+    max-width: none;
+  }
+
+  .report-sheet {
+    max-width: none;
+    padding-top: 0;
+  }
+
+  /*
+   * THE LETTERHEAD ON PAPER: always the Graphite drawing, sized in MILLIMETRES.
+   *
+   * The scheme toggle is reversed here unconditionally — see the note on
+   * `.report-lockup` for why the switch is `display` and not `<picture>`.
+   * Without these two lines a report printed from a dark-mode phone puts the
+   * Paper lockup on white paper.
+   *
+   * 32mm against logo/README.txt's 24mm floor, on a 182mm text column (A4 less
+   * the 14mm margins). `height: auto` rather than a second millimetre figure:
+   * the image is loaded long before print, so the browser uses the source's
+   * exact 1508:288 and no rounding enters the one dimension with a legal floor.
+   *
+   * AND A MILLIMETRE IS NOT A MILLIMETRE IN WEBKIT, which is worth stating
+   * because it is the one place this size could quietly break the floor.
+   * WebKit prints at 1px = 1pt, so a CSS `32mm` (120.9px at the 96px/in the
+   * spec assumes) becomes 120.9pt = 42.6mm of actual paper — a third too big.
+   * The `zoom: 0.75` below cancels exactly that (72/96), so the lockup lands at
+   * 32mm physical on both engines, 8mm clear of the floor. If that branch ever
+   * stops matching, the error is in the safe direction: bigger, never smaller.
+   */
+  .report-lockup-light {
+    display: block;
+  }
+
+  .report-lockup-dark {
+    display: none;
+  }
+
+  .report-lockup img {
+    width: 32mm;
+    height: auto;
+  }
+
+  /*
+   * ── ONE SHEET WIDTH ON BOTH ENGINES ───────────────────────────────────────
+   *
+   * Chromium lays a printed page out at 96 CSS px/in: 182mm inside the 14mm
+   * margins above is a 688px column. WebKit lays it out at 1 CSS px = 1 pt, and
+   * iOS Safari adds its own ~17.5mm margins on top: the operator's iPhone PDF
+   * measured 16px body text at 13.9pt glyph height in a ~496px column. Seven
+   * columns cannot be one line box in 496px at any type size worth printing —
+   * that gap IS the four-page UAT print. `zoom: 0.75` hands WebKit a 661px
+   * sheet, which is Chromium's layout to within ~20px.
+   *
+   * 0.75 IS NOT A TUNED VALUE. It is exactly 72/96, the pt-to-px ratio — the
+   * whole discrepancy between the two engines' printed units and nothing else.
+   * Do not nudge it to make something fit; there is no slack in it to find.
+   *
+   * ── WHY THERE ARE TWO GATES AND NOT ONE ───────────────────────────────────
+   *
+   * `@supports (font: -apple-system-body)` does not ask a question about the
+   * page — it asks which vendor wrote the parser. It is correct today (measured
+   * `CSS.supports('font','-apple-system-body')` false in Chrome 152, true only
+   * in WebKit) but its failure mode is silent and lands on the client: Chrome
+   * ALREADY accepts `-apple-system` as a `font-family` value, so the shorthand
+   * is one parser change away from matching, and every Chromium print would
+   * then shrink to 75% — 12pt body becoming 9pt, the 8.4pt table becoming
+   * 6.3pt (07-06 review, WR-04).
+   *
+   * So the vendor sniff is ANDed with the question actually being asked: is
+   * this page box narrow enough to need the correction? WebKit's A4 print box
+   * is at most 516px (182mm at 1px = 1pt) and measures ~496px on the iPhone;
+   * Chromium's is 688px. 560px sits between them with room on both sides, so
+   * the zoom cannot fire on a 96px/in engine even if the `@supports` premise
+   * flips. The width query alone is NOT enough to gate on — a Chromium A5 page
+   * is 559px — which is why both are required.
+   *
+   * The other direction (WebKit retiring the keyword, reverting iOS to the
+   * four-page print) is not guardable in CSS at all: nothing inside `zoom`'s
+   * own cascade can detect that it did not apply. The detector is
+   * `07-06-harness/run.sh`, which prints through real Chrome and real WKWebView
+   * and asserts page count, row integrity and surviving description length on
+   * both. `tests/layout-contract.test.ts` can only assert the declaration text
+   * is present — it cannot tell an inert rule from a working one, and it does
+   * not pretend to.
+   */
+  @supports (font: -apple-system-body) {
+    @media (max-width: 560px) {
+      html {
+        zoom: 0.75;
+      }
+    }
+  }
+
+  /* On screen the table scrolls sideways inside its box; on paper there is no
+     sideways, and a clipped column would silently drop the conservative figure
+     off the right edge of the sheet. */
+  .table-scroll {
+    overflow: visible;
+  }
+
+  /*
+   * The one place background/colour forcing is asked for. Browsers strip colour
+   * from print by default and this figure is the point of the page; nothing
+   * else on the sheet requests the exemption.
+   */
+  .report-hero dd {
+    color: var(--accent);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Page two gets the column headers too — on Chromium. `table-header-group` is
+     the UA default for a `thead` and repeats nothing on its own; Chromium
+     repeats a header group only when `break-inside: avoid` computes on the thead
+     box itself. Its UA print sheet supplies that, so declaring it here changes
+     nothing today — it keeps the dependency visible and survives any reset that
+     lands on top. WebKit does not repeat header groups at all, with or without
+     it: accepted engine debt (WINDOWS.md), not a rule this file lacks. */
+  .report-lines thead {
+    display: table-header-group;
+    break-inside: avoid;
+  }
+
+  /*
+   * ── EVERY JOB ROW IS ONE LINE BOX ─────────────────────────────────────────
+   *
+   * Neither engine keeps a multi-line row whole at a fold — WebKit split row
+   * #4208 in the UAT print with `break-inside: avoid` sitting right on it — so
+   * the guarantee here is structural rather than declared: a row one line box
+   * tall has nothing to split. These values are the measured budget that fits
+   * the seven columns in a 661px sheet; `0.75rem` wraps every row at that
+   * width, and so does `0.3rem` of horizontal padding once the Job cell is
+   * given the width below.
+   *
+   * `0.2rem` rather than the `0.3rem` this shipped with: seven columns pay the
+   * padding twice each, so the 0.1rem buys back 22px of sheet — and every one
+   * of those pixels goes to the Job cell, which is the only column whose
+   * content is being cut (see the cap below). Measured on both engines: no
+   * column runs into its neighbour at 8.4pt.
+   */
+  .report-lines th,
+  .report-lines td {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.2rem;
+    white-space: nowrap;
+  }
+
+  /* The remaining pressure valve. `Follow-ups` may wrap when the sheet is
+     narrower than the budget, so a sheet narrower than 661px costs a two-line
+     row rather than a Conservative column clipped off the right edge. Customer
+     is NOT in this list any more (07-06 review, CR-01): a first name is the
+     column least able to spend width, and a nowrap cell turns an over-budget
+     sheet into a LOUD `tableFits` failure in the harness instead of a silent
+     two-line row that WebKit may then split at a fold. */
+  .report-lines td.report-softwrap {
+    white-space: normal;
+  }
+
+  /*
+   * ── WHAT THE PRINTED JOB CELL CAN ACTUALLY SHOW ───────────────────────────
+   *
+   * THIS CAP IS A MEASURED BUDGET, NOT A PREFERENCE, AND IT COSTS CONTENT.
+   * The description is frozen at 60 code points at generation time so the
+   * client can recognise the job; paper then shows the first ~25 of them
+   * (Chromium) or ~22 (WebKit), because seven columns at 8.4pt do not fit more
+   * in a 661px sheet. On screen the whole 60 are readable — the cap is lifted
+   * there (see the `.report-lines .cell-truncate` screen rule above) — but a
+   * PDF has no hover, so on paper the tail is gone for good.
+   *
+   * 13rem is the frontier, re-measured after this review reclaimed width from
+   * the Follow-ups cell (`12 · 14–31 Aug`, not `12 (14 Aug–31 Aug)`), from
+   * Customer's nowrap, and from the padding above. 14rem overflows the sheet
+   * and clips the Conservative column; 10rem (what shipped) showed 15.
+   *
+   * The loss is priced rather than assumed: `07-06-harness/run.sh` asserts a
+   * minimum surviving description length on BOTH engines and fails if this cap
+   * is lowered or the reclaimed width is spent elsewhere, and the residual gap
+   * to the 60-code-point freeze is recorded in `.planning/WINDOWS.md`.
+   *
+   * `white-space: nowrap` is re-declared rather than inherited from the
+   * `.cell-truncate` rule in globals: the screen rule above overrides that
+   * inheritance at the same specificity as this one, so print has to say it.
+   */
+  .report-lines .cell-truncate {
+    max-width: 13rem;
+    white-space: nowrap;
+  }
+
+  /* A figure split from its label reads as two different numbers. Job rows are
+     NOT in this list: Chromium never honoured the property on a table row, and
+     WebKit split one at a fold regardless of it. They stay whole by being one
+     line box, above, not by a rule asking politely. */
+  .report-hero,
+  .report-figures,
+  .report-figure,
+  .report-notes li,
+  .report-footer {
+    break-inside: avoid;
+  }
+}
